@@ -1,0 +1,26 @@
+[
+  {
+    "lat": 32.02670629333614,
+    "lng": 50.05371093750001,
+    "name": "Füze Saldırısı",
+    "type": "ev_explosion",
+    "detail": "Saldırı yapıldı evet",
+    "weight": 2,
+    "date": "2026-03-17",
+    "country": "Bölge",
+    "faction": "Bildirilen",
+    "source": "Admin Onaylı"
+  },
+  {
+    "lat": 31.27745,
+    "lng": 43.17367,
+    "name": "Karbela - Patlama",
+    "type": "ev_strike",
+    "detail": "",
+    "weight": 3,
+    "date": "",
+    "country": "Bölge",
+    "faction": "Bildirilen",
+    "source": "Admin Onaylı"
+  }
+]

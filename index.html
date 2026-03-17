@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İran Krizi — Stratejik İstihbarat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0b0e13;
+  --panel:   #11161e;
+  --panel2:  #17202c;
+  --border:  #243040;
+  --border2: #2e4055;
+  --text:    #b8ccdc;
+  --muted:   #456070;
+  --dim:     #1a2535;
+  --iran:        #d4843a;
+  --israel:      #5a9fd4;
+  --usa:         #4a9a6a;
+  --nato:        #3a70a0;
+  --russia:      #a04040;
+  --houthi:      #8a7028;
+  --hezbollah:   #6a8a38;
+  --ev-strike:   #c0392b;
+  --ev-intercept:#2471a3;
+  --ev-explosion:#c0620a;
+  --ev-diplo:    #7d3c98;
+  --ev-protest:  #1e8449;
+  --ev-military: #148a7a;
+  --gold: #c9920a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#0b0e13;color:var(--text);
+  font-family:'Oxanium',sans-serif;
+  height:100vh;display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* TOPBAR */
+.topbar{
+  height:42px;background:var(--panel);
+  border-bottom:2px solid transparent;
+  background-image:linear-gradient(var(--panel),var(--panel)),
+    linear-gradient(90deg,transparent 0%,var(--gold) 30%,var(--iran) 70%,transparent 100%);
+  background-origin:border-box;background-clip:padding-box,border-box;
+  display:flex;align-items:center;padding:0 14px;gap:12px;
+  flex-shrink:0;z-index:2000;
+}
+.tb-logo{font-size:10px;font-weight:800;letter-spacing:4px;color:var(--gold);border:1px solid var(--gold);padding:2px 7px;}
+.tb-title{font-size:13px;font-weight:700;letter-spacing:2px;color:#dde8f0;text-transform:uppercase;}
+.tb-sep{width:1px;height:22px;background:var(--border);}
+.tb-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(192,57,43,.15);border:1px solid var(--ev-strike);padding:2px 8px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--ev-strike);animation:blink 1.4s ease-in-out infinite;box-shadow:0 0 5px var(--ev-strike);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.live-txt{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ev-strike);letter-spacing:2px;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.tb-clock{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+/* LAYOUT */
+.body-wrap{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT */
+.left{width:220px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;z-index:600;}
+.left-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+/* MAP */
+.map-wrap{flex:1;position:relative;overflow:hidden;}
+#map{width:100%;height:100%;background:#0b0e13;}
+
+/* RIGHT */
+.right{width:280px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;z-index:600;}
+
+/* TIMELINE */
+.timeline{height:58px;background:var(--panel);border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;padding:0 14px;gap:9px;z-index:700;}
+.tl-label{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap;text-transform:uppercase;}
+.tl-sep{width:1px;height:26px;background:var(--border);flex-shrink:0;}
+.tl-chip{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 9px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .13s;text-transform:uppercase;white-space:nowrap;}
+.tl-chip:hover{border-color:var(--gold);color:var(--gold);}
+.tl-chip.on{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700;}
+.tl-date{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 7px;outline:none;transition:border-color .13s;}
+.tl-date:focus{border-color:var(--gold);}
+.tl-apply{background:rgba(201,146,10,.12);border:1px solid var(--gold);color:var(--gold);font-family:'Oxanium',monospace;font-size:10px;font-weight:700;padding:4px 11px;cursor:pointer;transition:all .13s;letter-spacing:1px;}
+.tl-apply:hover{background:var(--gold);color:var(--bg);}
+.tl-info{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;white-space:nowrap;}
+#tl-count{color:var(--gold);font-weight:bold;}
+
+/* PANEL BLOCKS */
+.pblock{border-bottom:1px solid var(--border);padding:10px 12px;}
+.ptitle{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ptitle::before{content:'';display:block;width:14px;height:1px;background:var(--gold);opacity:.7;}
+
+/* LAYER ROWS */
+.lrow{display:flex;align-items:center;gap:7px;padding:3px 3px;cursor:pointer;border:1px solid transparent;border-radius:2px;margin-bottom:2px;transition:all .12s;}
+.lrow:hover{background:rgba(255,255,255,.04);border-color:var(--border);}
+.lrow.off .llabel{opacity:.3;}
+.lrow.off .lsym{opacity:.3;}
+.ltoggle{width:26px;height:13px;background:var(--dim);border-radius:7px;position:relative;transition:background .2s;flex-shrink:0;}
+.ltoggle::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--muted);transition:all .2s;}
+.lrow:not(.off) .ltoggle{background:rgba(201,146,10,.2);}
+.lrow:not(.off) .ltoggle::after{left:15px;background:var(--gold);}
+.lsym{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.llabel{font-size:11px;color:var(--text);line-height:1.2;}
+.lgroup-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:6px 0 3px 4px;}
+
+/* STATS */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.sbox{background:var(--panel2);border:1px solid var(--border);padding:7px 5px;text-align:center;}
+.sn{font-size:20px;font-weight:800;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;}
+.sl{font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:1px;color:var(--muted);margin-top:2px;text-transform:uppercase;}
+
+/* GDELT STATUS */
+.gstatus{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--panel2);border:1px solid var(--border);margin-bottom:6px;font-family:'Share Tech Mono',monospace;font-size:9px;}
+.gsdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ok{background:var(--ev-military);box-shadow:0 0 4px var(--ev-military);}
+.loading{background:var(--gold);animation:blink 1s ease-in-out infinite;}
+.err{background:var(--ev-strike);box-shadow:0 0 4px var(--ev-strike);}
+
+/* DETAIL CARD */
+.detail-empty{padding:20px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);line-height:2;text-align:center;}
+.dcard{background:var(--panel2);border:1px solid var(--border2);margin:8px;padding:0;overflow:hidden;}
+.dcard-head{padding:12px;border-bottom:1px solid var(--border);}
+.dcard-name{font-size:14px;font-weight:700;color:#e8f0f8;line-height:1.3;}
+.dcard-body{padding:10px 12px;font-size:11.5px;color:var(--text);line-height:1.75;}
+.dcard-meta{padding:8px 12px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);line-height:2;background:rgba(0,0,0,.2);}
+.dmeta-row{display:flex;justify-content:space-between;align-items:center;}
+.dmeta-key{color:var(--muted);}
+.dmeta-val{color:var(--text);text-align:right;}
+.dtag{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:1px;padding:1px 5px;border:1px solid;border-radius:1px;margin:2px 2px 0 0;}
+.dclose{float:right;background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;}
+.dclose:hover{color:var(--text);}
+
+/* FEED */
+.feed-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.feed-item{padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.feed-item:hover{background:var(--panel2);}
+.fi-title{font-size:10px;color:#dde8f0;margin-bottom:2px;line-height:1.4;}
+.fi-meta{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);display:flex;gap:8px;align-items:center;}
+.fi-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+/* MAP BUTTONS */
+.mapbtn{position:absolute;z-index:900;background:rgba(17,22,30,.85);border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:9px;padding:5px 9px;cursor:pointer;transition:all .13s;letter-spacing:1px;backdrop-filter:blur(4px);}
+.mapbtn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* COORD */
+#coord-strip{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);background:rgba(11,14,19,.85);border:1px solid var(--border);padding:3px 12px;z-index:900;pointer-events:none;letter-spacing:1px;backdrop-filter:blur(4px);}
+
+/* LEAFLET */
+.leaflet-popup-content-wrapper{background:var(--panel)!important;border:1px solid var(--border2)!important;border-radius:2px!important;box-shadow:0 6px 24px rgba(0,0,0,.7)!important;font-family:'Oxanium',sans-serif!important;color:var(--text)!important;}
+.leaflet-popup-tip{background:var(--panel)!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;font-size:16px!important;top:5px!important;right:7px!important;}
+.leaflet-popup-content{margin:13px!important;min-width:200px;}
+.lp-name{font-size:12px;font-weight:700;color:#e8f0f8;margin-bottom:3px;line-height:1.3;}
+.lp-type{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.lp-body{font-size:11px;color:var(--text);line-height:1.6;max-width:240px;}
+.lp-date{font-family:'Share Tech Mono',monospace;font-size:8.5px;color:var(--muted);margin-top:5px;}
+.lp-open{display:inline-block;margin-top:7px;font-family:'Share Tech Mono',monospace;font-size:8.5px;color:var(--gold);cursor:pointer;letter-spacing:1px;border-bottom:1px solid transparent;}
+.lp-open:hover{border-bottom-color:var(--gold);}
+.leaflet-control-zoom-in,.leaflet-control-zoom-out{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:0!important;}
+
+@keyframes ring-out{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.8);opacity:0;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">İKH</div>
+  <div class="tb-title">İran Krizi Haritası</div>
+  <div class="tb-sep"></div>
+  <div class="tb-sub">STRATEJİK İSTİHBARAT · 4 KATMAN · GDELT+MANUEL</div>
+  <div class="tb-right">
+    <div class="live-pill"><div class="live-dot"></div><div class="live-txt">CANLI</div></div>
+    <div class="tb-clock" id="clock">—</div>
+  </div>
+</div>
+
+<div class="body-wrap">
+
+<!-- LEFT -->
+<div class="left"><div class="left-scroll">
+
+  <div class="pblock">
+    <div class="ptitle">1 — Sabitler</div>
+    <div class="lgroup-title">İran</div>
+    <div class="lrow" data-layer="iran_air">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="none" stroke="#d4843a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Hava Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="iran_naval">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="none" stroke="#d4843a" stroke-width="1.5" stroke-dasharray="3,2"/></svg></div>
+      <div class="llabel">Deniz Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="iran_nuclear">
+      <div class="ltoggle"></div>
+      <div class="lsym" style="font-size:12px;color:#c9920a">☢</div>
+      <div class="llabel">Nükleer Tesisler</div>
+    </div>
+    <div class="lrow" data-layer="iran_missile">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,11 1,11" fill="none" stroke="#d4843a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Füze / IRGC</div>
+    </div>
+    <div class="lgroup-title" style="margin-top:6px">Batı / Müttefik</div>
+    <div class="lrow" data-layer="usa_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#4a9a6a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">ABD Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="nato_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#3a70a0" stroke-width="1.5"/></svg></div>
+      <div class="llabel">NATO Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="israel_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#5a9fd4" stroke-width="1.5"/></svg></div>
+      <div class="llabel">İsrail Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="russia_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#a04040" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Rusya Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="proxy_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,6 6,11 1,6" fill="none" stroke="#8a7028" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Vekil Güçler</div>
+    </div>
+  </div>
+
+  <div class="pblock">
+    <div class="ptitle">2 — Yarı-Sabitler</div>
+    <div class="lrow" data-layer="carriers">
+      <div class="ltoggle"></div>
+      <div class="lsym" style="font-size:13px;color:#4a9a6a">⬡</div>
+      <div class="llabel">Uçak Gemileri</div>
+    </div>
+    <div class="lrow" data-layer="fleets">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,6 6,11 1,6" fill="none" stroke="#4a9a6a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Deniz Filosu</div>
+    </div>
+    <div class="lrow" data-layer="airdefense">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,11 1,11" fill="none" stroke="#3a70a0" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Hava Savunma</div>
+    </div>
+  </div>
+
+  <div class="pblock">
+    <div class="ptitle">3 — Olaylar</div>
+    <div class="gstatus"><div class="gsdot loading" id="gs-dot"></div><span id="gs-txt" style="color:var(--muted)">GDELT bağlanıyor…</span></div>
+    <div class="lrow" data-layer="ev_strike">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13" stroke="#c0392b"><line x1="1" y1="1" x2="12" y2="12" stroke-width="2.2" stroke-linecap="round"/><line x1="12" y1="1" x2="1" y2="12" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+      <div class="llabel">Saldırı / Hava Harekâtı</div>
+    </div>
+    <div class="lrow" data-layer="ev_intercept">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13" stroke="#2471a3" fill="none"><path d="M6.5,1 L12,4.5 L12,8.5 Q6.5,13 6.5,13 Q1,8.5 1,8.5 L1,4.5 Z" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Önleme / Savunma</div>
+    </div>
+    <div class="lrow" data-layer="ev_explosion">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13" stroke="#c0620a" fill="none"><circle cx="6.5" cy="6.5" r="2.5" stroke-width="1.5"/><line x1="6.5" y1="1" x2="6.5" y2="3.5" stroke-width="1.5"/><line x1="6.5" y1="9.5" x2="6.5" y2="12" stroke-width="1.5"/><line x1="1" y1="6.5" x2="3.5" y2="6.5" stroke-width="1.5"/><line x1="9.5" y1="6.5" x2="12" y2="6.5" stroke-width="1.5"/><line x1="2.5" y1="2.5" x2="4.2" y2="4.2" stroke-width="1.3"/><line x1="8.8" y1="8.8" x2="10.5" y2="10.5" stroke-width="1.3"/><line x1="10.5" y1="2.5" x2="8.8" y2="4.2" stroke-width="1.3"/><line x1="4.2" y1="8.8" x2="2.5" y2="10.5" stroke-width="1.3"/></svg></div>
+      <div class="llabel">Patlama / Sabotaj</div>
+    </div>
+    <div class="lrow" data-layer="ev_diplo">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13" stroke="#7d3c98" fill="none"><rect x="2" y="3" width="9" height="5.5" rx="1" stroke-width="1.5"/><line x1="4.5" y1="8.5" x2="4" y2="12" stroke-width="1.3"/><line x1="8.5" y1="8.5" x2="9" y2="12" stroke-width="1.3"/></svg></div>
+      <div class="llabel">Siyasi Açıklama</div>
+    </div>
+    <div class="lrow" data-layer="ev_protest">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13" stroke="#1e8449" fill="none"><circle cx="6.5" cy="3.5" r="2" stroke-width="1.5"/><path d="M3,13 Q3,8 6.5,7 Q10,8 10,13" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Protesto</div>
+    </div>
+    <div class="lrow" data-layer="ev_military">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13" stroke="#148a7a" fill="none"><polygon points="6.5,1 12,11 1,11" stroke-width="1.5"/><line x1="6.5" y1="5" x2="6.5" y2="8.5" stroke-width="1.4"/><circle cx="6.5" cy="9.8" r=".9" fill="#148a7a"/></svg></div>
+      <div class="llabel">Askeri Harekat</div>
+    </div>
+  </div>
+
+  <div class="pblock">
+    <div class="ptitle">Özet</div>
+    <div class="sgrid">
+      <div class="sbox"><div class="sn" id="st-total">—</div><div class="sl">Toplam Olay</div></div>
+      <div class="sbox"><div class="sn" id="st-strike">—</div><div class="sl">Saldırı</div></div>
+      <div class="sbox"><div class="sn">34</div><div class="sl">Sabit Tesis</div></div>
+      <div class="sbox"><div class="sn">7</div><div class="sl">Yarı-Sabit</div></div>
+    </div>
+  </div>
+
+</div></div><!-- /left -->
+
+<!-- MAP -->
+<div class="map-wrap">
+  <div id="map"></div>
+  <button class="mapbtn" style="top:10px;right:10px" onclick="fetchGDELT()">↻ GDELT YENİLE</button>
+  <button class="mapbtn" style="top:44px;right:10px" onclick="lockToRegion()">⊡ SIFIRLA</button>
+  <div id="coord-strip">—</div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="pblock" style="padding:7px 12px;flex-shrink:0;">
+    <div class="ptitle" style="margin-bottom:0">Detay Kartı</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;" id="detail-area">
+    <div class="detail-empty">Haritada bir sembolü<br>tıklayın → detay açılır</div>
+  </div>
+  <div class="pblock" style="padding:7px 12px;flex-shrink:0;">
+    <div class="ptitle" style="margin-bottom:0">Son Olaylar</div>
+  </div>
+  <div class="feed-scroll" id="feed">
+    <div style="padding:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);">Yükleniyor…</div>
+  </div>
+</div>
+
+</div><!-- /body-wrap -->
+
+<!-- TIMELINE -->
+<div class="timeline">
+  <div class="tl-label">DÖNEM</div>
+  <button class="tl-chip on" data-span="24h">24s</button>
+  <button class="tl-chip" data-span="72h">72s</button>
+  <button class="tl-chip" data-span="7d">7g</button>
+  <button class="tl-chip" data-span="30d">30g</button>
+  <div class="tl-sep"></div>
+  <div class="tl-label">Başl.</div>
+  <input type="date" class="tl-date" id="tl-start" value="2026-03-10">
+  <div class="tl-label">Bitiş</div>
+  <input type="date" class="tl-date" id="tl-end" value="2026-03-17">
+  <button class="tl-apply" onclick="applyTimeline()">UYGULA</button>
+  <div class="tl-sep"></div>
+  <div class="tl-info">Görüntülenen: <span id="tl-count">—</span> olay</div>
+</div>
+
+<script>
+/* CLOCK */
+function tick(){
+  document.getElementById('clock').textContent=
+    new Date().toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tick,1000);tick();
+
+/* MAP */
+const REGION_BOUNDS = L.latLngBounds([10,25],[43,65]);
+const RENDER_BOUNDS = L.latLngBounds([-5,10],[55,80]);
+
+const map = L.map('map',{
+  center:[28.5,43.5],zoom:4,
+  zoomControl:true,attributionControl:false,
+  maxZoom:13,minZoom:2,
+  scrollWheelZoom:true,doubleClickZoom:true,touchZoom:true,
+  zoomSnap:0.1,zoomDelta:0.5,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+  {maxZoom:18,subdomains:'abcd',opacity:1}).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+  {maxZoom:18,subdomains:'abcd',opacity:0.65,zIndex:500}).addTo(map);
+L.control.attribution({prefix:false}).addTo(map)
+  .setPrefix('Harita: CartoDB · Olaylar: GDELT · Tesisler: GlobalSecurity/Wikipedia');
+
+let _lockedZoom=null;
+function lockToRegion(){
+  map.invalidateSize();
+  map.fitBounds(RENDER_BOUNDS,{padding:[0,0],animate:false});
+  const baseZoom=map.getZoom();
+  const crisisZoom=parseFloat((baseZoom+0.5).toFixed(1));
+  map.setView([28.5,43.5],crisisZoom,{animate:false});
+  _lockedZoom=crisisZoom;
+  map.setMinZoom(_lockedZoom);
+  map.off('zoomend.lock');
+  map.on('zoomend.lock',()=>{
+    if(_lockedZoom!==null&&map.getZoom()<_lockedZoom)
+      map.setZoom(_lockedZoom,{animate:false});
+  });
+  map.setMaxBounds(RENDER_BOUNDS);
+}
+map.whenReady(()=>setTimeout(lockToRegion,120));
+window.addEventListener('load',()=>setTimeout(lockToRegion,250));
+window.addEventListener('resize',()=>setTimeout(lockToRegion,100));
+
+/* LAYERS */
+const LG={};
+['iran_air','iran_naval','iran_nuclear','iran_missile',
+ 'usa_bases','nato_bases','israel_bases','russia_bases','proxy_bases',
+ 'carriers','fleets','airdefense',
+ 'ev_strike','ev_intercept','ev_explosion','ev_diplo','ev_protest','ev_military']
+.forEach(k=>{LG[k]=L.layerGroup().addTo(map);});
+
+const EVENT_REGISTRY=[];
+
+/* ICON FACTORIES */
+const C={iran:'#d4843a',israel:'#5a9fd4',usa:'#4a9a6a',nato:'#3a70a0',
+         russia:'#a04040',houthi:'#8a7028',hezbollah:'#6a8a38',
+         strike:'#c0392b',intercept:'#2471a3',explosion:'#c0620a',
+         diplo:'#7d3c98',protest:'#1e8449',military:'#148a7a',nuclear:'#c9920a'};
+
+function iCircle(col,sz=12,dash=false){
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}20;border:1.5px solid ${col};${dash?'border-style:dashed;':''}box-shadow:0 0 7px ${col}50;"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iSquare(col,sz=12){
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;background:${col}20;border:1.5px solid ${col};box-shadow:0 0 7px ${col}50;"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iDiamond(col,sz=12){
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;transform:rotate(45deg);background:${col}20;border:1.5px solid ${col};box-shadow:0 0 7px ${col}50;"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iTriangle(col,sz=14){
+  return L.divIcon({className:'',
+    html:`<svg width="${sz}" height="${sz}" viewBox="0 0 12 12"><polygon points="6,1 11,11 1,11" fill="${col}20" stroke="${col}" stroke-width="1.5" filter="drop-shadow(0 0 3px ${col}88)"/></svg>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz*0.85]});
+}
+function iNuke(sz=15){
+  return L.divIcon({className:'',
+    html:`<div style="font-size:${sz}px;line-height:1;filter:drop-shadow(0 0 4px #c9920a);">☢</div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iCarrier(col='#4a9a6a'){
+  return L.divIcon({className:'',
+    html:`<div style="font-size:19px;line-height:1;filter:drop-shadow(0 0 5px ${col});color:${col};">⬡</div>`,
+    iconSize:[22,22],iconAnchor:[11,11]});
+}
+function iEvent(type,col,weight=1){
+  const r=Math.max(10,Math.min(22,10+Math.round(weight*1.2))),d=r*2;
+  const inner={
+    ev_strike:   `<line x1="${r*.3}" y1="${r*.3}" x2="${r*1.7}" y2="${r*1.7}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
+                  <line x1="${r*1.7}" y1="${r*.3}" x2="${r*.3}" y2="${r*1.7}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`,
+    ev_intercept:`<path d="M${r},${r*.15} L${r*1.82},${r*.65} L${r*1.82},${r*1.25} Q${r},${r*1.9} ${r},${r*1.9} Q${r*.18},${r*1.25} ${r*.18},${r*1.25} L${r*.18},${r*.65} Z" stroke="${col}" stroke-width="1.5" fill="${col}18"/>`,
+    ev_explosion:`<circle cx="${r}" cy="${r}" r="${r*.45}" stroke="${col}" stroke-width="1.5" fill="none"/>
+                  <line x1="${r}" y1="${r*.1}" x2="${r}" y2="${r*.5}" stroke="${col}" stroke-width="1.5"/>
+                  <line x1="${r}" y1="${r*1.5}" x2="${r}" y2="${r*1.9}" stroke="${col}" stroke-width="1.5"/>
+                  <line x1="${r*.1}" y1="${r}" x2="${r*.5}" y2="${r}" stroke="${col}" stroke-width="1.5"/>
+                  <line x1="${r*1.5}" y1="${r}" x2="${r*1.9}" y2="${r}" stroke="${col}" stroke-width="1.5"/>
+                  <line x1="${r*.3}" y1="${r*.3}" x2="${r*.55}" y2="${r*.55}" stroke="${col}" stroke-width="1.3"/>
+                  <line x1="${r*1.45}" y1="${r*.55}" x2="${r*1.7}" y2="${r*.3}" stroke="${col}" stroke-width="1.3"/>
+                  <line x1="${r*.55}" y1="${r*1.45}" x2="${r*.3}" y2="${r*1.7}" stroke="${col}" stroke-width="1.3"/>
+                  <line x1="${r*1.45}" y1="${r*1.45}" x2="${r*1.7}" y2="${r*1.7}" stroke="${col}" stroke-width="1.3"/>`,
+    ev_diplo:    `<rect x="${r*.25}" y="${r*.4}" width="${r*1.5}" height="${r*1}" rx="1" stroke="${col}" stroke-width="1.5" fill="${col}15"/>
+                  <line x1="${r*.55}" y1="${r*1.4}" x2="${r*.4}" y2="${r*1.85}" stroke="${col}" stroke-width="1.3"/>
+                  <line x1="${r*1.45}" y1="${r*1.4}" x2="${r*1.6}" y2="${r*1.85}" stroke="${col}" stroke-width="1.3"/>`,
+    ev_protest:  `<circle cx="${r}" cy="${r*.6}" r="${r*.38}" stroke="${col}" stroke-width="1.5" fill="none"/>
+                  <path d="M${r*.35},${r*1.9} Q${r*.35},${r*1.1} ${r},${r*1.05} Q${r*1.65},${r*1.1} ${r*1.65},${r*1.9}" stroke="${col}" stroke-width="1.5" fill="none"/>`,
+    ev_military: `<polygon points="${r},${r*.15} ${r*1.82},${r*1.75} ${r*.18},${r*1.75}" stroke="${col}" stroke-width="1.5" fill="${col}15"/>
+                  <line x1="${r}" y1="${r*.75}" x2="${r}" y2="${r*1.35}" stroke="${col}" stroke-width="1.4"/>
+                  <circle cx="${r}" cy="${r*1.52}" r="${r*.13}" fill="${col}"/>`,
+  }[type]||`<circle cx="${r}" cy="${r}" r="${r*.6}" stroke="${col}" stroke-width="1.5" fill="none"/>`;
+  return L.divIcon({className:'',
+    html:`<div style="position:relative;width:${d}px;height:${d}px;">
+      <svg width="${d}" height="${d}" viewBox="0 0 ${d} ${d}" overflow="visible">
+        <circle cx="${r}" cy="${r}" r="${r-.5}" fill="${col}14" stroke="${col}" stroke-width="1.2"/>
+        <circle cx="${r}" cy="${r}" r="${r-.5}" fill="none" stroke="${col}" stroke-width="1" opacity=".6"
+          style="animation:ring-out 2.2s ease-out infinite;transform-origin:${r}px ${r}px"/>
+        ${inner}
+      </svg></div>`,
+    iconSize:[d,d],iconAnchor:[r,r]});
+}
+
+/* DETAIL CARD */
+const evLabel={ev_strike:'SALDIRI',ev_intercept:'ÖNLEME',ev_explosion:'PATLAMA',ev_diplo:'DİPLOMATİK',ev_protest:'PROTESTO',ev_military:'ASKERİ HAREKAT'};
+const evColor={ev_strike:C.strike,ev_intercept:C.intercept,ev_explosion:C.explosion,ev_diplo:C.diplo,ev_protest:C.protest,ev_military:C.military};
+
+function showDetail(obj){
+  const col=obj.color||'#c9920a';
+  const tagsHtml=(obj.tags||[]).map(t=>`<span class="dtag" style="color:${col};border-color:${col}44">${t}</span>`).join('');
+  const typeBadge=`<span style="display:inline-block;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;padding:2px 7px;border:1px solid ${col};color:${col};margin-bottom:4px;">${obj.typeLabel||'TESİS'}</span>`;
+  document.getElementById('detail-area').innerHTML=`
+  <div class="dcard">
+    <div class="dcard-head">
+      <button class="dclose" onclick="document.getElementById('detail-area').innerHTML='<div class=detail-empty>Seçim yok</div>'">✕</button>
+      <div>${typeBadge}</div>
+      <div class="dcard-name">${obj.name}</div>
+      ${tagsHtml?`<div style="margin-top:6px">${tagsHtml}</div>`:''}
+    </div>
+    <div class="dcard-body">${obj.detail||'—'}</div>
+    <div class="dcard-meta">
+      ${obj.country?`<div class="dmeta-row"><span class="dmeta-key">Bölge</span><span class="dmeta-val">${obj.country}</span></div>`:''}
+      ${obj.faction?`<div class="dmeta-row"><span class="dmeta-key">Fraksiyon</span><span class="dmeta-val" style="color:${col}">${obj.faction}</span></div>`:''}
+      ${obj.date?`<div class="dmeta-row"><span class="dmeta-key">Tarih</span><span class="dmeta-val">${obj.date}</span></div>`:''}
+      <div class="dmeta-row"><span class="dmeta-key">Koord</span><span class="dmeta-val">${parseFloat(obj.lat).toFixed(4)}°K ${parseFloat(obj.lng).toFixed(4)}°D</span></div>
+      ${obj.source?`<div class="dmeta-row"><span class="dmeta-key">Kaynak</span><span class="dmeta-val">${obj.source}</span></div>`:''}
+    </div>
+  </div>`;
+}
+
+function mkPopup(obj){
+  const col=obj.color||'#c9920a';
+  return `<div class="lp-name">${obj.name}</div>
+    <div class="lp-type" style="color:${col}">${obj.typeLabel||''}</div>
+    <div class="lp-body">${(obj.detail||'').substring(0,130)}${(obj.detail||'').length>130?'…':''}</div>
+    ${obj.date?`<div class="lp-date">${obj.date}</div>`:''}
+    <div class="lp-open" onclick="window._openDetail(${JSON.stringify(obj).replace(/"/g,'&quot;')})">▶ DETAY KARTINI AÇ</div>`;
+}
+window._openDetail=obj=>showDetail(obj);
+
+function addMarker(obj,icon,layerKey,isEvent=false){
+  const m=L.marker([obj.lat,obj.lng],{icon})
+    .bindPopup(mkPopup(obj),{maxWidth:270})
+    .on('click',()=>showDetail(obj))
+    .addTo(LG[layerKey]);
+  if(isEvent) EVENT_REGISTRY.push({marker:m,layerKey,date:obj.date||'',obj});
+  return m;
+}
+
+/* FEED */
+const feedItems=[];
+function pushFeed(obj){feedItems.unshift(obj);if(feedItems.length>60)feedItems.pop();renderFeed();}
+function renderFeed(){
+  const typeShort={ev_strike:'SALDIRI',ev_intercept:'ÖNLEME',ev_explosion:'PATLAMA',ev_diplo:'DİPLOMATİK',ev_protest:'PROTESTO',ev_military:'HAREKAT'};
+  document.getElementById('feed').innerHTML=feedItems.slice(0,30).map(f=>{
+    const c=evColor[f.type]||'#888';
+    return `<div class="feed-item" onclick="window._openDetail(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+      <div class="fi-title">${(f.name||'').substring(0,55)}</div>
+      <div class="fi-meta"><div class="fi-dot" style="background:${c}"></div>
+        <span style="color:${c}">${typeShort[f.type]||''}</span>
+        <span>${f.country||''}</span><span>${f.date||''}</span>
+      </div></div>`;
+  }).join('');
+}
+
+/* STATIC BASES */
+const BASES=[
+  {name:"TAB 1 — Mehrabad",lat:35.689,lng:51.313,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Tahran ana taktik hava üssü. F-14 Tomcat ve Saeqeh filosu. Başkent hava savunmasının merkezinde.",tags:["F-14","AKTİF"]},
+  {name:"TAB 2 — Tabriz",lat:38.133,lng:46.235,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Kuzey İran stratejik hava üssü. NATO güney kanadını izler. Azerbaycan ve Ermenistan sınırına yakın."},
+  {name:"TAB 3 — Hamadan",lat:35.211,lng:48.653,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Merkezi stratejik hava üssü. 2016'da Rusya Tu-22M operasyonları için geçici kullandı."},
+  {name:"TAB 4 — Dezful/Vahdati",lat:32.234,lng:48.397,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Irak sınırına yakın taktik üs. F-4 Phantom filosu."},
+  {name:"TAB 6 — Buşehr",lat:28.944,lng:50.834,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Körfez hava operasyonları merkezi. Nükleer santral ile aynı bölge."},
+  {name:"TAB 7 — Şiraz",lat:29.534,lng:52.589,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Güney İran hava üssü. Eğitim ve operasyon merkezi."},
+  {name:"TAB 8 — Bender Abbas",lat:27.218,lng:56.378,icon:"✈",type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Hürmüz Boğazı denetim üssü. Drone filosu ile güçlendirildi.",tags:["DRONE","STRATEJİK"]},
+  {name:"Bandar İmam Khomeini",lat:30.441,lng:49.066,icon:"⚓",type:"iran_naval",color:C.iran,typeLabel:"İran Deniz Üssü",faction:"IRGC Deniz",country:"İran",detail:"IRGC Deniz Kuvvetleri Körfez ana üssü. Mayın gemileri, hızlı tekne, füze fırkateynleri.",tags:["IRGC","ANA ÜS"]},
+  {name:"Cask Deniz Üssü",lat:25.648,lng:57.764,icon:"⚓",type:"iran_naval",color:C.iran,typeLabel:"İran Deniz Üssü",faction:"İran Donanması",country:"İran",detail:"Hint Okyanusu giriş stratejik noktası."},
+  {name:"Bender Abbas Limanı",lat:27.184,lng:56.266,icon:"⚓",type:"iran_naval",color:C.iran,typeLabel:"Askeri Liman",faction:"İran Donanması",country:"İran",detail:"Ana deniz filosu liman tesisi. Fırkateyn ve denizaltı bakım merkezi."},
+  {name:"Natanz",lat:33.722,lng:51.727,icon:"☢",type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer — Zenginleştirme",faction:"AEOI",country:"İran",detail:"İran ana uranyum zenginleştirme tesisi. Stuxnet ve çok sayıda sabotaja uğradı.",tags:["IAEA","ZENGİNLEŞTİRME"]},
+  {name:"Fordo",lat:34.884,lng:50.993,icon:"☢",type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer — Yeraltı",faction:"AEOI",country:"İran",detail:"Dağ içi bombalama dayanıklı yeraltı zenginleştirme tesisi. %60 zenginleştirme.",tags:["YER ALTI","IAEA"]},
+  {name:"Parchin",lat:35.523,lng:51.777,icon:"☢",type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer — Askeri",faction:"IRGC",country:"İran",detail:"Nükleer silah testi şüphesi. Ekim 2024 İsrail saldırısıyla hasar gördü.",tags:["HASAR","IAEA"]},
+  {name:"Isfahan Dönüşüm Tesisi",lat:32.610,lng:51.681,icon:"☢",type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer — Dönüşüm",faction:"AEOI",country:"İran",detail:"Uranyum dönüşüm ve yakıt üretim tesisi."},
+  {name:"Buşehr Nükleer Santrali",lat:28.830,lng:50.887,icon:"☢",type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer Santral",faction:"İran/Rusya",country:"İran",detail:"Rusya yapımı 1000 MW nükleer enerji santrali.",tags:["RUSYA YPM"]},
+  {name:"Hojir Füze Üssü",lat:35.661,lng:51.601,icon:"🚀",type:"iran_missile",color:C.iran,typeLabel:"Füze Üretim",faction:"IRGC Hava",country:"İran",detail:"Balistik füze üretim kompleksi. Yeraltı tünel sistemi. Ekim 2024 saldırısından etkilendi.",tags:["BALİSTİK","YERALTI"]},
+  {name:"Shahroud Füze/Uzay",lat:36.209,lng:55.135,icon:"🚀",type:"iran_missile",color:C.iran,typeLabel:"Füze Test Sahası",faction:"IRGC Hava",country:"İran",detail:"Balistik füze ve uzay fırlatma test sahası."},
+  {name:"IRGC Meşhed Karargahı",lat:36.297,lng:59.607,icon:"🚀",type:"iran_missile",color:C.iran,typeLabel:"IRGC Karargah",faction:"IRGC",country:"İran",detail:"IRGC kuzeydoğu komuta merkezi. Afganistan/Pakistan sınırı yakını."},
+  {name:"Ain al-Asad (ABD)",lat:33.376,lng:42.441,icon:"🏛",type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF/ARMY",country:"Irak",detail:"ABD kuvvetleri Irak ana üssü. 2024'te 100+ roket/İHA saldırısına hedef oldu.",tags:["SALDIRI HEDEF"]},
+  {name:"Erbil (ABD/Koalisyon)",lat:36.237,lng:43.963,icon:"🏛",type:"usa_bases",color:C.usa,typeLabel:"ABD Koalisyon Üssü",faction:"USAF",country:"Irak (IKBY)",detail:"Kürdistan Bölgesi koalisyon üssü. İran 2022'de balistik füze saldırısı düzenledi.",tags:["FÜZE SALDIRISI"]},
+  {name:"Al-Tanf (ABD)",lat:33.482,lng:38.649,icon:"🏛",type:"usa_bases",color:C.usa,typeLabel:"ABD İleri Üssü",faction:"USSOCOM",country:"Suriye",detail:"İran'ın Lübnan'a uzanan kara koridorunu keser.",tags:["STRATEJİK"]},
+  {name:"Al-Udeid / CENTCOM",lat:25.117,lng:51.315,icon:"🏛",type:"usa_bases",color:C.usa,typeLabel:"ABD / CENTCOM HQ",faction:"USAF/CENTCOM",country:"Katar",detail:"ABD CENTCOM ana karargahı. 10.000+ personel. B-52H ve F-35 filosu.",tags:["CENTCOM HQ"]},
+  {name:"Prince Sultan AB",lat:23.933,lng:45.428,icon:"🏛",type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF",country:"Suudi Arabistan",detail:"F-35A ve Patriot bataryaları konuşlanmış."},
+  {name:"İncirlik (NATO/ABD)",lat:37.002,lng:35.426,icon:"⊕",type:"nato_bases",color:C.nato,typeLabel:"NATO Hava Üssü",faction:"NATO/USAF",country:"Türkiye",detail:"NATO güney kanadı kilit üssü. B61 nükleer silah depolama şüphesi.",tags:["NATO","B61?"]},
+  {name:"Aksaz Deniz Üssü",lat:36.909,lng:28.316,icon:"⊕",type:"nato_bases",color:C.nato,typeLabel:"NATO Deniz Üssü",faction:"NATO/Türkiye",country:"Türkiye",detail:"NATO Türkiye deniz üssü. Akdeniz operasyonları merkezi."},
+  {name:"Nevatim Hava Üssü",lat:30.969,lng:34.830,icon:"✡",type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"F-35I 'Adir' filosu. İran'a yönelik hava operasyonlarının ana üssü.",tags:["F-35I","İRAN OPS"]},
+  {name:"Tel Nof Hava Üssü",lat:31.840,lng:34.819,icon:"✡",type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"F-15 ve F-16 filosu. İHA operasyon merkezi."},
+  {name:"Dimona — Nükleer",lat:30.996,lng:35.147,icon:"☢",type:"israel_bases",color:C.israel,typeLabel:"İsrail Nükleer",faction:"Negev",country:"İsrail",detail:"Açıklanmamış nükleer tesis. 80-400 başlık tahmini.",tags:["DUYURULMADI"]},
+  {name:"Hmeimim Hava Üssü",lat:35.401,lng:35.948,icon:"★",type:"russia_bases",color:C.russia,typeLabel:"Rusya Hava Üssü",faction:"VKS",country:"Suriye",detail:"Rusya Suriye ana hava üssü. Su-35S, Su-34, Tu-95 konuşlanmış.",tags:["AKTİF"]},
+  {name:"Tartus Deniz Üssü",lat:34.888,lng:35.887,icon:"★",type:"russia_bases",color:C.russia,typeLabel:"Rusya Deniz Üssü",faction:"VMF",country:"Suriye",detail:"Rusya'nın Akdeniz'deki tek kalıcı deniz tesisi."},
+  {name:"G.Lübnan — Hizbullah",lat:33.349,lng:35.477,icon:"⬦",type:"proxy_bases",color:C.hezbollah,typeLabel:"Vekil — Hizbullah",faction:"Hizbullah",country:"Lübnan",detail:"Hizbullah güney Lübnan konuşlanması. 150.000+ füze tahmini.",tags:["150K FÜZE"]},
+  {name:"Deir ez-Zor — IRGC",lat:35.336,lng:40.142,icon:"⬦",type:"proxy_bases",color:C.iran,typeLabel:"IRGC Suriye",faction:"IRGC/Milisler",country:"Suriye",detail:"IRGC ve bağlı milislerin Suriye ana konuşlanması.",tags:["İSRAİL HEDEF"]},
+  {name:"Sana'a — Husi",lat:15.476,lng:44.220,icon:"⬦",type:"proxy_bases",color:C.houthi,typeLabel:"Husi Üssü",faction:"Husiler",country:"Yemen",detail:"Husi başkent üssü. İsrail ve ABD/İngiltere saldırılarına hedef.",tags:["ABD HEDEF"]},
+  {name:"Hudeyde — Husi",lat:14.799,lng:42.957,icon:"⬦",type:"proxy_bases",color:C.houthi,typeLabel:"Husi Limanı",faction:"Husiler",country:"Yemen",detail:"Kızıldeniz saldırı lojistik üssü. İsrail'in vurduğu tesisler.",tags:["HASAR"]},
+];
+
+const bIcon={iran_air:()=>iCircle(C.iran,12),iran_naval:()=>iCircle(C.iran,12,true),iran_nuclear:()=>iNuke(14),iran_missile:()=>iTriangle(C.iran,14),usa_bases:()=>iSquare(C.usa,12),nato_bases:()=>iSquare(C.nato,12),israel_bases:()=>iSquare(C.israel,12),russia_bases:()=>iSquare(C.russia,12),proxy_bases:b=>iDiamond(b.color||C.houthi,12)};
+BASES.forEach(b=>addMarker(b,(bIcon[b.type]||((b)=>iCircle(C.iran,10)))(b),b.type,false));
+
+/* SEMI-STATIC */
+const SEMI=[
+  {name:"USS Harry S. Truman (CVN-75)",lat:32.0,lng:34.2,color:C.usa,typeLabel:"ABD Uçak Gemisi",faction:"USN",country:"Doğu Akdeniz",detail:"Doğu Akdeniz'e konuşlandırıldı. F/A-18 ve F-35C filosu. 5000+ mürettebat.",tags:["AKTİF"],layerKey:"carriers"},
+  {name:"USS Gerald R. Ford (CVN-78)",lat:25.5,lng:57.2,color:C.usa,typeLabel:"ABD Uçak Gemisi",faction:"USN",country:"Arabistan Denizi",detail:"Hint Okyanusu rotasyonunda.",tags:["ROTASYONDA"],layerKey:"carriers"},
+  {name:"HMS Prince of Wales (R09)",lat:33.5,lng:32.8,color:C.nato,typeLabel:"NATO Uçak Gemisi",faction:"Royal Navy",country:"Akdeniz",detail:"NATO görev grubu ile Doğu Akdeniz devriyesi. F-35B filosu.",tags:["NATO"],layerKey:"carriers"},
+  {name:"USN 5th Fleet — Bahreyn",lat:26.2,lng:50.6,color:C.usa,typeLabel:"ABD 5. Filo HQ",faction:"USN",country:"Bahreyn",detail:"ABD 5. Filosu karargahı. Körfez anti-İran operasyonları.",layerKey:"fleets"},
+  {name:"NATO SNMG-2 Grubu",lat:34.5,lng:32.5,color:C.nato,typeLabel:"NATO Deniz Grubu",faction:"NATO",country:"Akdeniz",detail:"NATO Kalıcı Deniz Grubu 2. 6 fırkateyn.",layerKey:"fleets"},
+  {name:"Patriot PAC-3 — BAE",lat:24.45,lng:54.36,color:C.usa,typeLabel:"Hava Savunma",faction:"ABD/BAE",country:"BAE",detail:"Patriot PAC-3 bataryası. İran ve Husi füzelerine karşı.",tags:["PAC-3"],layerKey:"airdefense"},
+  {name:"Iron Dome — Negev",lat:31.25,lng:34.79,color:C.israel,typeLabel:"Hava Savunma",faction:"IAF",country:"İsrail",detail:"Iron Dome bataryası. Hamas, Husi ve Hizbullah füzelerine karşı.",tags:["IRON DOME"],layerKey:"airdefense"},
+];
+SEMI.forEach(s=>{
+  let icon;
+  if(s.layerKey==='carriers') icon=iCarrier(s.color);
+  else if(s.layerKey==='fleets') icon=iDiamond(s.color,14);
+  else icon=iTriangle(s.color,13);
+  addMarker(s,icon,s.layerKey,false);
+});
+
+/* SEED EVENTS */
+const SEEDS=[
+  {lat:31.354,lng:34.308,type:"ev_strike",  date:"2026-03-15",country:"Filistin",faction:"IAF→Hamas",  weight:9,name:"Gazze — Hava Saldırısı",detail:"İsrail Hava Kuvvetleri Hamas altyapısına yönelik harekât. Rafah kuzeyinde 12 konum vuruldu."},
+  {lat:15.476,lng:44.220,type:"ev_strike",  date:"2026-03-14",country:"Yemen",   faction:"USAF/IAF",   weight:7,name:"Sana'a — ABD/İsrail Saldırısı",detail:"ABD ve İsrail koordineli hava operasyonu. Husi radar ve füze sistemleri hedeflendi."},
+  {lat:33.349,lng:35.477,type:"ev_strike",  date:"2026-03-13",country:"Lübnan",  faction:"IAF→Hizbullah",weight:6,name:"G.Lübnan — İsrail Harekâtı",detail:"İsrail'in Hizbullah mevzilerine yönelik saldırılar."},
+  {lat:35.336,lng:40.142,type:"ev_strike",  date:"2026-03-12",country:"Suriye",  faction:"IAF→IRGC",   weight:5,name:"Deir ez-Zor — İsrail",detail:"İsrail Hava Kuvvetleri IRGC mevzileri ve silah depolarını vurdu."},
+  {lat:14.799,lng:42.957,type:"ev_strike",  date:"2026-03-11",country:"Yemen",   faction:"IAF→Husi",   weight:6,name:"Hudeyde — İsrail Saldırısı",detail:"Hudeyde limanı yakıt tesisi ve askeri altyapı vuruldu."},
+  {lat:32.1,  lng:34.9,  type:"ev_intercept",date:"2026-03-16",country:"İsrail", faction:"Arrow-3",    weight:6,name:"Tel Aviv — Arrow-3 Önleme",detail:"Arrow-3 sistemi Husi hipersonik İHA'yı atmosfer dışında imha etti."},
+  {lat:24.45, lng:54.36, type:"ev_intercept",date:"2026-03-15",country:"BAE",    faction:"Patriot/BAE",weight:5,name:"BAE — Patriot Önleme",detail:"PAC-3 Husi balistik füzeyi Riyad güzergahında imha etti."},
+  {lat:29.346,lng:47.521,type:"ev_intercept",date:"2026-03-14",country:"Kuveyt", faction:"ABD/Kuveyt", weight:4,name:"Kuveyt — İHA Önleme",detail:"Hava savunma sistemi İran kaynaklı İHA'yı önledi."},
+  {lat:35.523,lng:51.777,type:"ev_explosion",date:"2026-03-10",country:"İran",   faction:"Belirsiz",   weight:7,name:"Parchin — Patlama Raporu",detail:"Parchin askeri kompleksinde patlama. Uydu görüntüleri hasar teyit ediyor."},
+  {lat:36.202,lng:37.162,type:"ev_explosion",date:"2026-03-09",country:"Suriye", faction:"Belirsiz",   weight:4,name:"Halep — Araç Bombası",detail:"Halep'te araçla bombalı saldırı. 3 ölü, 12 yaralı."},
+  {lat:35.689,lng:51.313,type:"ev_diplo",   date:"2026-03-16",country:"İran",    faction:"İran Dışişleri",weight:5,name:"Tahran — Nükleer Açıklama",detail:"İran Dışişleri: 'Nükleer müzakere masadan kalkmamıştır ancak koşullar netleşmelidir.'"},
+  {lat:31.776,lng:35.234,type:"ev_diplo",   date:"2026-03-15",country:"İsrail",  faction:"İsrail Hükümeti",weight:6,name:"Kudüs — İran Uyarısı",detail:"İsrail Başbakanı: İran'ın nükleer programını durdurmak için her seçenek masada."},
+  {lat:38.907,lng:35.821,type:"ev_diplo",   date:"2026-03-14",country:"Türkiye", faction:"AKP",        weight:4,name:"Ankara — Ateşkes Çağrısı",detail:"Türkiye Dışişleri: Bölgesel tırmanma endişe verici, tarafları diyaloğa davet ediyoruz."},
+  {lat:40.409,lng:49.867,type:"ev_diplo",   date:"2026-03-13",country:"Azerbaycan",faction:"Azerbaycan",weight:3,name:"Bakü — İran Tepkisi",detail:"Azerbaycan: İran sınırındaki asker yığınağı egemenlik ihlaline yakın."},
+  {lat:40.177,lng:44.503,type:"ev_diplo",   date:"2026-03-12",country:"Ermenistan",faction:"Ermenistan",weight:3,name:"Erivan — Diplomatik Temas",detail:"Ermenistan Dışişleri İran büyükelçisini kabul etti. Sınır güvenliği görüşüldü."},
+  {lat:33.886,lng:35.495,type:"ev_protest", date:"2026-03-16",country:"Lübnan",  faction:"Halk",       weight:4,name:"Beyrut — Anti-İsrail Gösterisi",detail:"Güney Lübnan saldırılarını protesto eden binlerce kişi Beyrut'ta toplandı."},
+  {lat:30.044,lng:31.235,type:"ev_protest", date:"2026-03-15",country:"Mısır",   faction:"Halk",       weight:3,name:"Kahire — Filistin Mitingi",detail:"Gazze'ye destek mitingi. 5000+ katılımcı, Tahrir Meydanı."},
+  {lat:26.587,lng:56.482,type:"ev_military",date:"2026-03-15",country:"Uluslararası",faction:"IRGC/İran",weight:8,name:"Hürmüz — İran Tatbikatı",detail:"İran Deniz Kuvvetleri büyük çaplı tatbikat. 40+ gemi, denizaltı, İHA.",tags:["KRİTİK","40+ GEMİ"]},
+  {lat:36.5,  lng:49.5,  type:"ev_military",date:"2026-03-14",country:"İran",    faction:"IRGC Kara",  weight:7,name:"KBİ İran — IRGC Yığınak",detail:"IRGC kara kuvvetleri Azerbaycan sınırına üç tugay yığınağı.",tags:["YIĞINAK","3 TUGAY"]},
+  {lat:12.585,lng:43.479,type:"ev_military",date:"2026-03-16",country:"Uluslararası",faction:"USN",     weight:7,name:"Kızıldeniz — ABD Harekâtı",detail:"ABD 5. Filosu Kızıldeniz'de ticaret gemisi koruması ve Husi karşıtı harekât."},
+  {lat:37.002,lng:35.426,type:"ev_military",date:"2026-03-12",country:"Türkiye", faction:"NATO",       weight:5,name:"İncirlik — NATO F-35 Takviye",detail:"İncirlik'e 6 ek F-35A konuşlandırıldı. NATO doğu kanadı güçlendirmesi."},
+];
+
+SEEDS.forEach(e=>{
+  const col=evColor[e.type];
+  const obj={...e,color:col,typeLabel:evLabel[e.type],source:'Statik Veri'};
+  addMarker(obj,iEvent(e.type,col,e.weight||1),e.type,true);
+  pushFeed(obj);
+});
+
+/* TIMELINE */
+let activeStart=null,activeEnd=null;
+function applyTimeline(){
+  activeStart=document.getElementById('tl-start').value||null;
+  activeEnd=document.getElementById('tl-end').value||null;
+  filterEvents();
+}
+function filterEvents(){
+  let shown=0;
+  EVENT_REGISTRY.forEach(({marker,layerKey,date})=>{
+    const inLayer=map.hasLayer(LG[layerKey]);
+    let show=true;
+    if(activeStart&&date&&date<activeStart) show=false;
+    if(activeEnd&&date&&date>activeEnd) show=false;
+    if(show&&inLayer){if(!LG[layerKey].hasLayer(marker))LG[layerKey].addLayer(marker);shown++;}
+    else{if(LG[layerKey].hasLayer(marker))LG[layerKey].removeLayer(marker);}
+  });
+  document.getElementById('tl-count').textContent=shown;
+  updateStats();
+}
+function updateStats(){
+  const total=EVENT_REGISTRY.filter(r=>map.hasLayer(LG[r.layerKey])&&LG[r.layerKey].hasLayer(r.marker)).length;
+  const strikes=EVENT_REGISTRY.filter(r=>r.layerKey==='ev_strike'&&map.hasLayer(LG[r.layerKey])&&LG[r.layerKey].hasLayer(r.marker)).length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-strike').textContent=strikes;
+}
+document.querySelectorAll('.tl-chip[data-span]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tl-chip[data-span]').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    const now=new Date(),start=new Date(now);
+    const span=btn.dataset.span;
+    if(span==='24h')start.setDate(start.getDate()-1);
+    else if(span==='72h')start.setDate(start.getDate()-3);
+    else if(span==='7d')start.setDate(start.getDate()-7);
+    else if(span==='30d')start.setDate(start.getDate()-30);
+    const fmt=d=>d.toISOString().split('T')[0];
+    document.getElementById('tl-start').value=fmt(start);
+    document.getElementById('tl-end').value=fmt(now);
+    applyTimeline();
+  });
+});
+
+/* LAYER TOGGLES */
+document.querySelectorAll('.lrow[data-layer]').forEach(row=>{
+  row.addEventListener('click',()=>{
+    const k=row.dataset.layer;
+    if(map.hasLayer(LG[k])){map.removeLayer(LG[k]);row.classList.add('off');}
+    else{LG[k].addTo(map);row.classList.remove('off');}
+    filterEvents();
+  });
+});
+
+/* GDELT */
+function setGS(state,msg){
+  document.getElementById('gs-dot').className='gsdot '+(state==='ok'?'ok':state==='err'?'err':'loading');
+  document.getElementById('gs-txt').textContent=msg;
+}
+function classifyCAMEO(cameo){
+  const n=parseInt(String(cameo||''))||0;
+  if(n>=180)return 'ev_strike';
+  if(n>=150)return 'ev_military';
+  if(n>=130)return 'ev_diplo';
+  if(n>=110)return 'ev_protest';
+  return 'ev_military';
+}
+async function fetchGDELT(){
+  setGS('loading','GDELT sorgulanıyor…');
+  EVENT_REGISTRY.filter(r=>r.source==='gdelt').forEach(r=>{try{LG[r.layerKey].removeLayer(r.marker);}catch(e){}});
+  const keep=EVENT_REGISTRY.filter(r=>r.source!=='gdelt');
+  EVENT_REGISTRY.length=0;keep.forEach(r=>EVENT_REGISTRY.push(r));
+  const span=document.querySelector('.tl-chip.on')?.dataset.span||'72h';
+  const q=encodeURIComponent('(missile attack airstrike explosion military Iran IRGC Houthi Hezbollah Hamas nuclear strike intercept)');
+  const url=`https://api.gdeltproject.org/api/v2/geo/geo?query=${q}&timespan=${span}&format=GeoJSON&maxrecords=250&SMOOTHING=0`;
+  try{
+    const resp=await fetch(url);
+    if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
+    const gj=await resp.json();
+    const feats=(gj.features||[]).filter(f=>{
+      if(!f.geometry||f.geometry.type!=='Point')return false;
+      const[lng,lat]=f.geometry.coordinates;
+      return lat>10&&lat<45&&lng>25&&lng<68;
+    });
+    const used=new Set(),clusters=[];
+    feats.forEach((f,i)=>{
+      if(used.has(i))return;
+      const[lng,lat]=f.geometry.coordinates;
+      const grp=[f];used.add(i);
+      feats.forEach((g,j)=>{
+        if(used.has(j))return;
+        const[gl,ga]=g.geometry.coordinates;
+        if(Math.abs(lat-ga)<0.65&&Math.abs(lng-gl)<0.65){grp.push(g);used.add(j);}
+      });
+      clusters.push(grp);
+    });
+    const maxSz=Math.max(...clusters.map(c=>c.length),1);
+    let cnt=0;
+    clusters.forEach(members=>{
+      let sla=0,sln=0;
+      members.forEach(m=>{sla+=m.geometry.coordinates[1];sln+=m.geometry.coordinates[0];});
+      const lat=sla/members.length,lng=sln/members.length;
+      const p=members[0].properties||{};
+      const type=classifyCAMEO(p.EventCode||'');
+      const w=Math.max(1,Math.min(10,Math.round((members.length/maxSz)*10)));
+      const col=evColor[type];
+      const name=(p.name||p.title||'GDELT Olayı').substring(0,60);
+      const country=p.ActionGeo_CountryCode||p.country||'—';
+      const date=(p.SQLDATE||new Date().toISOString().split('T')[0]).toString().replace(/(\d{4})(\d{2})(\d{2}).*/,'$1-$2-$3');
+      const obj={name,lat,lng,type,color:col,typeLabel:evLabel[type],faction:'GDELT Canlı',country,date,
+        detail:`${members.length} haber kaynağı bu bölgede tespit edildi.`,source:'GDELT'};
+      const m=addMarker(obj,iEvent(type,col,w),type,true);
+      EVENT_REGISTRY[EVENT_REGISTRY.length-1].source='gdelt';
+      pushFeed(obj);cnt++;
+    });
+    setGS('ok',`${cnt} olay · ${new Date().toLocaleTimeString('tr-TR')}`);
+    filterEvents();
+  }catch(err){
+    setGS('err','Bağlantı hatası — statik aktif');
+    filterEvents();
+  }
+}
+
+/* COORDS */
+map.on('mousemove',e=>{
+  document.getElementById('coord-strip').textContent=
+    `${e.latlng.lat.toFixed(4)}° K  ·  ${e.latlng.lng.toFixed(4)}° D`;
+});
+
+/* ══════════════════════════════════════════
+   SUNUCU API — db.json eventlerini çek
+══════════════════════════════════════════ */
+const API_BASE = 'http://localhost:3000';
+
+// Sunucudan eventleri çek ve haritaya ekle
+// Sunucudan yüklenen event ID'lerini takip et (tekrar yükleme önleme)
+const serverEventIds = new Set();
+
+async function fetchServerEvents(){
+  try{
+    const resp = await fetch(`${API_BASE}/api/events`);
+    if(!resp.ok) throw new Error('Sunucu yanıt vermedi');
+    const events = await resp.json();
+
+    // Sadece yeni eventleri ekle — zaten yüklenenleri atla
+    let newCount = 0;
+    events.forEach(e=>{
+      if(!e.lat||!e.lng||!e.type) return;
+
+      // Benzersiz ID oluştur (lat+lng+name+date kombinasyonu)
+      const eid = `${e.lat}_${e.lng}_${e.name}_${e.date}`;
+      if(serverEventIds.has(eid)) return; // zaten yüklendi, atla
+      serverEventIds.add(eid);
+
+      const col = evColor[e.type]||C.strike;
+      const obj = {
+        ...e,
+        color: col,
+        typeLabel: evLabel[e.type]||e.type,
+        source: 'server'
+      };
+      addMarker(obj, iEvent(e.type, col, e.weight||3), e.type, true);
+      EVENT_REGISTRY[EVENT_REGISTRY.length-1].source = 'server';
+      pushFeed(obj);
+      newCount++;
+    });
+
+    if(newCount > 0) filterEvents();
+    document.getElementById('srv-badge').textContent = `✓ ${events.length} olay`;
+    document.getElementById('srv-badge').style.color = 'var(--ev-military)';
+  }catch(err){
+    document.getElementById('srv-badge').textContent = '✗ Sunucu yok';
+    document.getElementById('srv-badge').style.color = 'var(--muted)';
+  }
+}
+
+/* ══════════════════════════════════════════
+   ADMİN PANELİ
+══════════════════════════════════════════ */
+// Admin oturum durumu
+let adminLoggedIn = false;
+let adminPickMode = false;  // haritadan konum seçme modu
+let adminPickedLat = null;
+let adminPickedLng = null;
+let adminPickMarker = null;
+
+// Panel aç/kapat
+function toggleAdmin(){
+  const panel = document.getElementById('admin-overlay');
+  panel.style.display = panel.style.display==='flex' ? 'none' : 'flex';
+  if(panel.style.display==='flex' && !adminLoggedIn){
+    document.getElementById('admin-login').style.display='block';
+    document.getElementById('admin-form').style.display='none';
+  }
+}
+
+// Giriş
+function adminLogin(){
+  const u=document.getElementById('a-user').value;
+  const p=document.getElementById('a-pass').value;
+  if(!u||!p){alert('Kullanıcı adı ve şifre giriniz.');return;}
+  // Kimlik doğrulama sunucuda yapılacak, burada sadece geçiş
+  adminLoggedIn=true;
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-form').style.display='block';
+}
+
+// Haritadan konum seçme modu
+function startPick(){
+  adminPickMode=true;
+  document.getElementById('admin-overlay').style.display='none';
+  document.getElementById('pick-hint').style.display='block';
+  map.getContainer().style.cursor='crosshair';
+}
+
+map.on('click',function(e){
+  if(!adminPickMode) return;
+  adminPickedLat = e.latlng.lat;
+  adminPickedLng = e.latlng.lng;
+
+  // Geçici marker
+  if(adminPickMarker) map.removeLayer(adminPickMarker);
+  adminPickMarker = L.circleMarker([adminPickedLat,adminPickedLng],{
+    radius:8, color:'#c9920a', fillColor:'#c9920a', fillOpacity:.4, weight:2
+  }).addTo(map);
+
+  // Formu doldur
+  document.getElementById('a-lat').value = adminPickedLat.toFixed(5);
+  document.getElementById('a-lng').value = adminPickedLng.toFixed(5);
+
+  // Modu kapat
+  adminPickMode=false;
+  map.getContainer().style.cursor='';
+  document.getElementById('pick-hint').style.display='none';
+  document.getElementById('admin-overlay').style.display='flex';
+  document.getElementById('admin-form').style.display='block';
+});
+
+// Event gönder
+async function submitEvent(){
+  const u = document.getElementById('a-user').value;
+  const p = document.getElementById('a-pass').value;
+  const name    = document.getElementById('a-name').value.trim();
+  const type    = document.getElementById('a-type').value;
+  const date    = document.getElementById('a-date').value;
+  const lat     = parseFloat(document.getElementById('a-lat').value);
+  const lng     = parseFloat(document.getElementById('a-lng').value);
+  const country = document.getElementById('a-country').value.trim();
+  const detail  = document.getElementById('a-detail').value.trim();
+  const weight  = parseInt(document.getElementById('a-weight').value)||3;
+
+  if(!name){alert('Olay adı zorunlu.');return;}
+  if(isNaN(lat)||isNaN(lng)){alert('Koordinat giriniz (haritaya tıklayın).');return;}
+
+  const event={lat,lng,name,type,detail,weight,date,country:country||'Bölge',faction:'Bildirilen',source:'Admin Onaylı'};
+
+  try{
+    const resp=await fetch(`${API_BASE}/api/events`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p,event})
+    });
+    const result=await resp.json();
+    if(!resp.ok) throw new Error(result.error||'Hata');
+
+    alert('✓ Olay başarıyla eklendi!');
+    // Formu temizle
+    ['a-name','a-lat','a-lng','a-country','a-detail'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('a-weight').value='3';
+    if(adminPickMarker){map.removeLayer(adminPickMarker);adminPickMarker=null;}
+    document.getElementById('admin-overlay').style.display='none';
+    // Sunucudan yenile
+    fetchServerEvents();
+  }catch(err){
+    alert('✗ Hata: '+(err.message||'Sunucu bağlantısı kurulamadı'));
+  }
+}
+
+/* INIT */
+applyTimeline();
+fetchGDELT();
+fetchServerEvents();
+setInterval(fetchGDELT,15*60*1000);
+setInterval(fetchServerEvents,30*1000); // sunucu eventleri 30sn'de bir yenile
+</script>
+
+<!-- ══════════════════════════
+     ADMİN BUTONU (harita üzeri)
+══════════════════════════ -->
+<button onclick="toggleAdmin()" style="
+  position:fixed;bottom:70px;right:14px;z-index:3000;
+  background:rgba(17,22,30,.9);border:1px solid var(--gold);
+  color:var(--gold);font-family:'Share Tech Mono',monospace;
+  font-size:10px;letter-spacing:2px;padding:6px 12px;
+  cursor:pointer;backdrop-filter:blur(6px);transition:all .15s;
+" onmouseover="this.style.background='var(--gold)';this.style.color='#0b0e13'"
+   onmouseout="this.style.background='rgba(17,22,30,.9)';this.style.color='var(--gold)'">
+  ⊕ ADMİN
+</button>
+
+<!-- Sunucu durumu rozeti -->
+<div id="srv-badge" style="
+  position:fixed;bottom:70px;left:234px;z-index:3000;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  background:rgba(17,22,30,.85);border:1px solid var(--border);
+  padding:4px 10px;letter-spacing:1px;color:var(--muted);
+  backdrop-filter:blur(4px);
+">… sunucu kontrol ediliyor</div>
+
+<!-- Haritadan konum seçme ipucu -->
+<div id="pick-hint" style="
+  display:none;position:fixed;top:55px;left:50%;transform:translateX(-50%);
+  z-index:3000;background:rgba(201,146,10,.95);color:#0b0e13;
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;
+  padding:8px 20px;font-weight:700;
+">⊕ HARITADA KONUMA TIKLAYIN</div>
+
+<!-- ══════════════════════════
+     ADMİN OVERLAY
+══════════════════════════ -->
+<div id="admin-overlay" style="
+  display:none;position:fixed;inset:0;z-index:4000;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+">
+  <div style="
+    background:#11161e;border:1px solid #2e4055;
+    width:420px;max-height:90vh;overflow-y:auto;
+    font-family:'Oxanium',sans-serif;
+  ">
+    <!-- Header -->
+    <div style="
+      padding:12px 16px;border-bottom:1px solid #243040;
+      display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(90deg,rgba(201,146,10,.08),transparent);
+    ">
+      <div style="font-size:11px;font-weight:700;letter-spacing:3px;color:#c9920a;text-transform:uppercase;">⊕ Admin Paneli</div>
+      <button onclick="toggleAdmin()" style="background:none;border:none;color:#456070;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+
+    <!-- GİRİŞ FORMU -->
+    <div id="admin-login" style="padding:20px 16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#456070;margin-bottom:14px;text-transform:uppercase;">Kimlik Doğrulama</div>
+      <input id="a-user" type="text" placeholder="Kullanıcı adı" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:12px;
+        padding:8px 10px;outline:none;margin-bottom:8px;
+      ">
+      <input id="a-pass" type="password" placeholder="Şifre" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:12px;
+        padding:8px 10px;outline:none;margin-bottom:12px;
+      ">
+      <button onclick="adminLogin()" style="
+        width:100%;background:rgba(201,146,10,.12);border:1px solid #c9920a;
+        color:#c9920a;font-family:'Oxanium',sans-serif;font-size:12px;
+        font-weight:700;padding:9px;cursor:pointer;letter-spacing:2px;
+        transition:all .13s;
+      " onmouseover="this.style.background='#c9920a';this.style.color='#0b0e13'"
+         onmouseout="this.style.background='rgba(201,146,10,.12)';this.style.color='#c9920a'">
+        GİRİŞ YAP
+      </button>
+    </div>
+
+    <!-- EVENT EKLEME FORMU -->
+    <div id="admin-form" style="display:none;padding:16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#456070;margin-bottom:12px;text-transform:uppercase;">Yeni Olay Ekle</div>
+
+      <!-- Konum seç butonu -->
+      <button onclick="startPick()" style="
+        width:100%;background:rgba(41,128,185,.12);border:1px dashed #2471a3;
+        color:#5a9fd4;font-family:'Oxanium',sans-serif;font-size:11px;
+        font-weight:600;padding:8px;cursor:pointer;letter-spacing:1px;
+        margin-bottom:10px;transition:all .13s;
+      " onmouseover="this.style.background='rgba(41,128,185,.25)'"
+         onmouseout="this.style.background='rgba(41,128,185,.12)'">
+        ⊕ HARİTADAN KONUM SEÇ
+      </button>
+
+      <!-- Koordinatlar (otomatik dolar) -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input id="a-lat" type="number" step="0.0001" placeholder="Enlem" style="flex:1;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 8px;outline:none;">
+        <input id="a-lng" type="number" step="0.0001" placeholder="Boylam" style="flex:1;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 8px;outline:none;">
+      </div>
+
+      <input id="a-name" type="text" placeholder="Olay adı / başlık *" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:12px;
+        padding:7px 10px;outline:none;margin-bottom:8px;
+      ">
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <select id="a-type" style="flex:2;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:11px;padding:7px 8px;outline:none;">
+          <option value="ev_strike">✕ Saldırı / Hava Harekâtı</option>
+          <option value="ev_intercept">⛉ Önleme / Savunma</option>
+          <option value="ev_explosion">⊕ Patlama / Sabotaj</option>
+          <option value="ev_diplo">▭ Siyasi Açıklama</option>
+          <option value="ev_protest">☻ Protesto</option>
+          <option value="ev_military">△ Askeri Harekat</option>
+        </select>
+        <input id="a-date" type="date" style="flex:1.5;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 6px;outline:none;">
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+        <input id="a-country" type="text" placeholder="Ülke / Bölge" style="flex:1;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:11px;padding:7px 8px;outline:none;">
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#456070;letter-spacing:1px;">AĞIRLIK</span>
+          <input id="a-weight" type="number" min="1" max="10" value="3" style="width:46px;background:#17202c;border:1px solid #243040;color:#c9920a;font-family:'Share Tech Mono',monospace;font-size:12px;padding:7px 6px;outline:none;text-align:center;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:#456070;">/10</span>
+        </div>
+      </div>
+
+      <textarea id="a-detail" placeholder="Açıklama (isteğe bağlı)" rows="3" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:11px;
+        padding:7px 10px;outline:none;resize:none;margin-bottom:12px;
+      "></textarea>
+
+      <div style="display:flex;gap:8px;">
+        <button onclick="submitEvent()" style="
+          flex:1;background:rgba(201,146,10,.12);border:1px solid #c9920a;
+          color:#c9920a;font-family:'Oxanium',sans-serif;font-size:12px;
+          font-weight:700;padding:9px;cursor:pointer;letter-spacing:1px;
+          transition:all .13s;
+        " onmouseover="this.style.background='#c9920a';this.style.color='#0b0e13'"
+           onmouseout="this.style.background='rgba(201,146,10,.12)';this.style.color='#c9920a'">
+          ⊕ HARITAYA EKLE
+        </button>
+        <button onclick="toggleAdmin()" style="
+          flex:0 0 auto;background:transparent;border:1px solid #243040;
+          color:#456070;font-family:'Oxanium',sans-serif;font-size:12px;
+          padding:9px 14px;cursor:pointer;transition:all .13s;
+        " onmouseover="this.style.borderColor='#456070';this.style.color='#b8ccdc'"
+           onmouseout="this.style.borderColor='#243040';this.style.color='#456070'">
+          İPTAL
+        </button>
+      </div>
+
+      <!-- Çıkış -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #243040;text-align:right;">
+        <button onclick="adminLoggedIn=false;document.getElementById('admin-login').style.display='block';document.getElementById('admin-form').style.display='none';"
+          style="background:none;border:none;color:#456070;font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">
+          ↩ ÇIKIŞ YAP
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
