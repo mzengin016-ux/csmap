@@ -50,7 +50,7 @@ app.post('/api/events', (req, res) => {
   }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Iran Crisis Map Event Server running on http://localhost:${PORT}`);
+  console.log(`Iran Crisis Map Event Server running on port ${PORT}`);
 });
