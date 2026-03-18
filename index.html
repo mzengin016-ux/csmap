@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İran Krizi — Stratejik İstihbarat</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0b0e13;
+  --panel:   #11161e;
+  --panel2:  #17202c;
+  --border:  #243040;
+  --border2: #2e4055;
+  --text:    #b8ccdc;
+  --muted:   #456070;
+  --dim:     #1a2535;
+  --iran:        #d4843a;
+  --israel:      #5a9fd4;
+  --usa:         #4a9a6a;
+  --nato:        #3a70a0;
+  --russia:      #a04040;
+  --houthi:      #8a7028;
+  --hezbollah:   #6a8a38;
+  --ev-strike:   #c0392b;
+  --ev-intercept:#2471a3;
+  --ev-explosion:#c0620a;
+  --ev-diplo:    #7d3c98;
+  --ev-protest:  #1e8449;
+  --ev-military: #148a7a;
+  --gold: #c9920a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:100%;overflow:hidden;}
+body{
+  background:#0b0e13;color:var(--text);
+  font-family:'Oxanium',sans-serif;
+  height:100%;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* TOPBAR */
+.topbar{
+  height:42px;background:var(--panel);
+  border-bottom:2px solid transparent;
+  background-image:linear-gradient(var(--panel),var(--panel)),
+    linear-gradient(90deg,transparent 0%,var(--gold) 30%,var(--iran) 70%,transparent 100%);
+  background-origin:border-box;background-clip:padding-box,border-box;
+  display:flex;align-items:center;padding:0 14px;gap:12px;
+  flex-shrink:0;z-index:2000;
+}
+.tb-logo{font-size:10px;font-weight:800;letter-spacing:4px;color:var(--gold);border:1px solid var(--gold);padding:2px 7px;}
+.tb-title{font-size:13px;font-weight:700;letter-spacing:2px;color:#dde8f0;text-transform:uppercase;}
+.tb-sep{width:1px;height:22px;background:var(--border);}
+.tb-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(192,57,43,.15);border:1px solid var(--ev-strike);padding:2px 8px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--ev-strike);animation:blink 1.4s ease-in-out infinite;box-shadow:0 0 5px var(--ev-strike);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.live-txt{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ev-strike);letter-spacing:2px;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.tb-clock{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+/* LAYOUT */
+.body-wrap{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT */
+.left{width:220px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;z-index:600;}
+.left-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+/* MAP */
+.map-wrap{flex:1;position:relative;overflow:hidden;}
+#map{width:100%;height:100%;background:#0b0e13;}
+
+/* RIGHT */
+.right{width:280px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;z-index:600;}
+
+/* TIMELINE */
+.timeline{height:58px;background:var(--panel);border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;padding:0 14px;gap:9px;z-index:700;}
+.tl-label{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;white-space:nowrap;text-transform:uppercase;}
+.tl-sep{width:1px;height:26px;background:var(--border);flex-shrink:0;}
+.tl-chip{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 9px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .13s;text-transform:uppercase;white-space:nowrap;}
+.tl-chip:hover{border-color:var(--gold);color:var(--gold);}
+.tl-chip.on{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:700;}
+.tl-date{background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 7px;outline:none;transition:border-color .13s;}
+.tl-date:focus{border-color:var(--gold);}
+.tl-apply{background:rgba(201,146,10,.12);border:1px solid var(--gold);color:var(--gold);font-family:'Oxanium',monospace;font-size:10px;font-weight:700;padding:4px 11px;cursor:pointer;transition:all .13s;letter-spacing:1px;}
+.tl-apply:hover{background:var(--gold);color:var(--bg);}
+.tl-info{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;white-space:nowrap;}
+#tl-count{color:var(--gold);font-weight:bold;}
+
+/* PANEL BLOCKS */
+.pblock{border-bottom:1px solid var(--border);padding:10px 12px;}
+.ptitle{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ptitle::before{content:'';display:block;width:14px;height:1px;background:var(--gold);opacity:.7;}
+
+/* LAYER ROWS */
+.lrow{display:flex;align-items:center;gap:7px;padding:3px 3px;cursor:pointer;border:1px solid transparent;border-radius:2px;margin-bottom:2px;transition:all .12s;}
+.lrow:hover{background:rgba(255,255,255,.04);border-color:var(--border);}
+.lrow.off .llabel{opacity:.3;}
+.lrow.off .lsym{opacity:.3;}
+.ltoggle{width:26px;height:13px;background:var(--dim);border-radius:7px;position:relative;transition:background .2s;flex-shrink:0;}
+.ltoggle::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--muted);transition:all .2s;}
+.lrow:not(.off) .ltoggle{background:rgba(201,146,10,.2);}
+.lrow:not(.off) .ltoggle::after{left:15px;background:var(--gold);}
+.lsym{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.llabel{font-size:11px;color:var(--text);line-height:1.2;}
+.lgroup-title{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:6px 0 3px 4px;}
+
+/* STATS */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.sbox{background:var(--panel2);border:1px solid var(--border);padding:7px 5px;text-align:center;}
+.sn{font-size:20px;font-weight:800;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;}
+.sl{font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:1px;color:var(--muted);margin-top:2px;text-transform:uppercase;}
+
+/* DETAIL CARD */
+.detail-empty{padding:20px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);line-height:2;text-align:center;}
+.dcard{background:var(--panel2);border:1px solid var(--border2);margin:8px;padding:0;overflow:hidden;}
+.dcard-head{padding:12px;border-bottom:1px solid var(--border);}
+.dcard-name{font-size:14px;font-weight:700;color:#e8f0f8;line-height:1.3;}
+.dcard-body{padding:10px 12px;font-size:11.5px;color:var(--text);line-height:1.75;}
+.dcard-meta{padding:8px 12px;border-top:1px solid var(--border);font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);line-height:2;background:rgba(0,0,0,.2);}
+.dmeta-row{display:flex;justify-content:space-between;align-items:center;}
+.dmeta-key{color:var(--muted);}
+.dmeta-val{color:var(--text);text-align:right;}
+.dtag{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:1px;padding:1px 5px;border:1px solid;border-radius:1px;margin:2px 2px 0 0;}
+.dclose{float:right;background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;}
+.dclose:hover{color:var(--text);}
+
+/* FEED */
+.feed-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.feed-item{padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;}
+.feed-item:hover{background:var(--panel2);}
+.fi-title{font-size:10px;color:#dde8f0;margin-bottom:2px;line-height:1.4;}
+.fi-meta{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);display:flex;gap:8px;align-items:center;}
+.fi-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+/* MAP BUTTONS */
+.mapbtn{position:absolute;z-index:900;background:rgba(17,22,30,.85);border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:9px;padding:5px 9px;cursor:pointer;transition:all .13s;letter-spacing:1px;backdrop-filter:blur(4px);}
+.mapbtn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* COORD */
+#coord-strip{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);background:rgba(11,14,19,.85);border:1px solid var(--border);padding:3px 12px;z-index:900;pointer-events:none;letter-spacing:1px;backdrop-filter:blur(4px);}
+
+/* LEAFLET */
+.leaflet-popup-content-wrapper{background:var(--panel)!important;border:1px solid var(--border2)!important;border-radius:2px!important;box-shadow:0 6px 24px rgba(0,0,0,.7)!important;font-family:'Oxanium',sans-serif!important;color:var(--text)!important;}
+.leaflet-popup-tip{background:var(--panel)!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;font-size:16px!important;top:5px!important;right:7px!important;}
+.leaflet-popup-content{margin:13px!important;min-width:200px;}
+.lp-name{font-size:12px;font-weight:700;color:#e8f0f8;margin-bottom:3px;line-height:1.3;}
+.lp-type{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.lp-body{font-size:11px;color:var(--text);line-height:1.6;max-width:240px;}
+.lp-date{font-family:'Share Tech Mono',monospace;font-size:8.5px;color:var(--muted);margin-top:5px;}
+.lp-open{display:inline-block;margin-top:7px;font-family:'Share Tech Mono',monospace;font-size:8.5px;color:var(--gold);cursor:pointer;letter-spacing:1px;border-bottom:1px solid transparent;}
+.lp-open:hover{border-bottom-color:var(--gold);}
+.leaflet-control-zoom-in,.leaflet-control-zoom-out{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:0!important;}
+
+@keyframes ring-out{0%{transform:scale(1);opacity:.7;}100%{transform:scale(2.8);opacity:0;}}
+@keyframes pulse-ring{
+  0%{transform:scale(0.6);opacity:0.8;}
+  70%{transform:scale(2.2);opacity:0;}
+  100%{transform:scale(2.2);opacity:0;}
+}
+.ev-pulse-ring{
+  position:absolute;border-radius:50%;
+  animation:pulse-ring 2s ease-out infinite;
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">İKH</div>
+  <div class="tb-title">İran Krizi Haritası</div>
+  <div class="tb-sep"></div>
+  <div class="tb-sub">STRATEJİK İSTİHBARAT · 4 KATMAN · MANUEL GİRİŞ</div>
+  <div class="tb-right">
+    <div class="live-pill"><div class="live-dot"></div><div class="live-txt">CANLI</div></div>
+    <div class="tb-clock" id="clock">—</div>
+  </div>
+</div>
+
+<div class="body-wrap">
+
+<!-- LEFT -->
+<div class="left"><div class="left-scroll">
+
+  <div class="pblock">
+    <div class="ptitle">1 — Sabitler</div>
+    <div class="lgroup-title">İran</div>
+    <div class="lrow" data-layer="iran_air">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="none" stroke="#d4843a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Hava Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="iran_naval">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="none" stroke="#d4843a" stroke-width="1.5" stroke-dasharray="3,2"/></svg></div>
+      <div class="llabel">Deniz Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="iran_nuclear">
+      <div class="ltoggle"></div>
+      <div class="lsym" style="font-size:12px;color:#c9920a">☢</div>
+      <div class="llabel">Nükleer Tesisler</div>
+    </div>
+    <div class="lrow" data-layer="iran_missile">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,11 1,11" fill="none" stroke="#d4843a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Füze / IRGC</div>
+    </div>
+    <div class="lgroup-title" style="margin-top:6px">Batı / Müttefik</div>
+    <div class="lrow" data-layer="usa_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#4a9a6a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">ABD Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="nato_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#3a70a0" stroke-width="1.5"/></svg></div>
+      <div class="llabel">NATO Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="israel_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#5a9fd4" stroke-width="1.5"/></svg></div>
+      <div class="llabel">İsrail Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="russia_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="#a04040" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Rusya Üsleri</div>
+    </div>
+    <div class="lrow" data-layer="proxy_bases">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,6 6,11 1,6" fill="none" stroke="#8a7028" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Vekil Güçler</div>
+    </div>
+  </div>
+
+  <div class="pblock">
+    <div class="ptitle">2 — Yarı-Sabitler</div>
+    <div class="lrow" data-layer="carriers">
+      <div class="ltoggle"></div>
+      <div class="lsym" style="font-size:13px;color:#4a9a6a">⬡</div>
+      <div class="llabel">Uçak Gemileri</div>
+    </div>
+    <div class="lrow" data-layer="fleets">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,6 6,11 1,6" fill="none" stroke="#4a9a6a" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Deniz Filosu</div>
+    </div>
+    <div class="lrow" data-layer="airdefense">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="12" height="12"><polygon points="6,1 11,11 1,11" fill="none" stroke="#3a70a0" stroke-width="1.5"/></svg></div>
+      <div class="llabel">Hava Savunma</div>
+    </div>
+    <div class="lrow" data-layer="radar_sites">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="14" height="13" viewBox="0 0 22 22">
+        <path d="M11,18 L11,11" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M4,11 Q4,4 11,4 Q18,4 18,11 Z" fill="#00e5ff22" stroke="#00e5ff" stroke-width="1.5"/>
+        <line x1="7" y1="18" x2="15" y2="18" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="11" cy="11" r="1.5" fill="#00e5ff"/>
+      </svg></div>
+      <div class="llabel">Radar Tesisleri</div>
+    </div>
+  </div>
+
+  <div class="pblock">
+    <div class="ptitle">3 — Olaylar</div>
+    <div class="lrow" data-layer="ev_strike">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="5" fill="#b22222"/></svg></div>
+      <div class="llabel">Saldırı</div>
+    </div>
+    <div class="lrow" data-layer="ev_intercept">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="#c0392b" stroke-width="2"/></svg></div>
+      <div class="llabel">Önleme</div>
+    </div>
+    <div class="lrow" data-layer="ev_assassination">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="13" height="16" viewBox="0 0 22 22">
+        <ellipse cx="11" cy="13" rx="5.5" ry="5" fill="#1a0000" stroke="#8b0000" stroke-width="1.5"/>
+        <rect x="8.5" y="17" width="5" height="2.5" rx="1" fill="#1a0000" stroke="#8b0000" stroke-width="1"/>
+        <ellipse cx="8.8" cy="13" rx="1.5" ry="1.7" fill="#8b0000"/>
+        <ellipse cx="13.2" cy="13" rx="1.5" ry="1.7" fill="#8b0000"/>
+        <line x1="7" y1="3" x2="15" y2="8" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/>
+        <line x1="15" y1="3" x2="7" y2="8" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/>
+      </svg></div>
+      <div class="llabel">Ölüm / Suikast</div>
+    </div>
+    <div class="lrow" data-layer="ev_military">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="14" height="13" viewBox="0 0 22 18">
+        <path d="M3,13 Q3,4 11,4 Q19,4 19,13 Z" fill="#3a5a3a" stroke="#5a8a6a" stroke-width="1.5"/>
+        <rect x="2" y="13" width="18" height="3" rx="1.5" fill="#2a4a2a" stroke="#5a8a6a" stroke-width="1.2"/>
+      </svg></div>
+      <div class="llabel">Askeri Harekat</div>
+    </div>
+    <div class="lrow" data-layer="ev_statement">
+      <div class="ltoggle"></div>
+      <div class="lsym"><svg width="16" height="11" viewBox="0 0 26 18">
+        <rect x="1" y="1" width="24" height="13" rx="2" fill="#1a2535" stroke="#cccccc" stroke-width="1.5"/>
+        <circle cx="8" cy="7.5" r="1.8" fill="#cccccc"/>
+        <circle cx="13" cy="7.5" r="1.8" fill="#cccccc"/>
+        <circle cx="18" cy="7.5" r="1.8" fill="#cccccc"/>
+      </svg></div>
+      <div class="llabel">Açıklama</div>
+    </div>
+  </div>
+
+  <div class="pblock">
+    <div class="ptitle">Özet</div>
+    <div class="sgrid">
+      <div class="sbox"><div class="sn" id="st-total">—</div><div class="sl">Toplam Olay</div></div>
+      <div class="sbox"><div class="sn" id="st-strike">—</div><div class="sl">Saldırı</div></div>
+      <div class="sbox"><div class="sn">57</div><div class="sl">Sabit Tesis</div></div>
+      <div class="sbox"><div class="sn">14</div><div class="sl">Yarı-Sabit</div></div>
+    </div>
+  </div>
+
+</div></div><!-- /left -->
+
+<!-- MAP -->
+<div class="map-wrap">
+  <div id="map"></div>
+  <button class="mapbtn" style="top:10px;right:10px" onclick="lockToRegion()">⊡ SIFIRLA</button>
+  <div id="coord-strip">—</div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="pblock" style="padding:7px 12px;flex-shrink:0;">
+    <div class="ptitle" style="margin-bottom:0">Detay Kartı</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;" id="detail-area">
+    <div class="detail-empty">Haritada bir sembolü<br>tıklayın → detay açılır</div>
+  </div>
+  <div class="pblock" style="padding:7px 12px;flex-shrink:0;">
+    <div class="ptitle" style="margin-bottom:0">Son Olaylar</div>
+  </div>
+  <div class="feed-scroll" id="feed">
+    <div style="padding:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);">Yükleniyor…</div>
+  </div>
+</div>
+
+</div><!-- /body-wrap -->
+
+<!-- TIMELINE -->
+<div class="timeline">
+  <div class="tl-label">DÖNEM</div>
+  <button class="tl-chip on" data-span="24h">24s</button>
+  <button class="tl-chip" data-span="72h">72s</button>
+  <button class="tl-chip" data-span="7d">7g</button>
+  <button class="tl-chip" data-span="30d">30g</button>
+  <div class="tl-sep"></div>
+  <div class="tl-label">Başl.</div>
+  <input type="date" class="tl-date" id="tl-start" value="2026-03-10">
+  <div class="tl-label">Bitiş</div>
+  <input type="date" class="tl-date" id="tl-end" value="2026-03-17">
+  <button class="tl-apply" onclick="applyTimeline()">UYGULA</button>
+  <div class="tl-sep"></div>
+  <div class="tl-info">Görüntülenen: <span id="tl-count">—</span> olay</div>
+</div>
+
+<script>
+/* CLOCK */
+function tick(){
+  document.getElementById('clock').textContent=
+    new Date().toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tick,1000);tick();
+
+/* MAP */
+const REGION_BOUNDS = L.latLngBounds([10,25],[43,65]);
+const RENDER_BOUNDS = L.latLngBounds([-5,10],[55,80]);
+
+const _leafletMap = L.map('map',{
+  center:[28.5,43.5],zoom:4,
+  zoomControl:true,attributionControl:false,
+  maxZoom:13,minZoom:2,
+  scrollWheelZoom:true,doubleClickZoom:true,touchZoom:true,
+  zoomSnap:0.1,zoomDelta:0.5,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+  {maxZoom:18,subdomains:'abcd',opacity:1}).addTo(_leafletMap);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+  {maxZoom:18,subdomains:'abcd',opacity:0.65,zIndex:500}).addTo(_leafletMap);
+L.control.attribution({prefix:false}).addTo(_leafletMap)
+  .setPrefix('Harita: CartoDB · Tesisler: GlobalSecurity/Wikipedia');
+
+let _lockedZoom=null;
+function lockToRegion(){
+  _leafletMap.invalidateSize();
+  _leafletMap.fitBounds(RENDER_BOUNDS,{padding:[0,0],animate:false});
+  const baseZoom=_leafletMap.getZoom();
+  const crisisZoom=parseFloat((baseZoom+0.5).toFixed(1));
+  _leafletMap.setView([28.5,43.5],crisisZoom,{animate:false});
+  _lockedZoom=crisisZoom;
+  _leafletMap.setMinZoom(_lockedZoom);
+  _leafletMap.off('zoomend.lock');
+  _leafletMap.on('zoomend.lock',()=>{
+    if(_lockedZoom!==null&&_leafletMap.getZoom()<_lockedZoom)
+      _leafletMap.setZoom(_lockedZoom,{animate:false});
+  });
+  _leafletMap.setMaxBounds(RENDER_BOUNDS);
+}
+_leafletMap.whenReady(()=>setTimeout(lockToRegion,120));
+window.addEventListener('load',()=>setTimeout(lockToRegion,250));
+window.addEventListener('resize',()=>setTimeout(lockToRegion,100));
+
+/* LAYERS */
+const LG={};
+['iran_air','iran_naval','iran_nuclear','iran_missile',
+ 'usa_bases','nato_bases','israel_bases','russia_bases','proxy_bases',
+ 'carriers','fleets','airdefense','radar_sites',
+ 'ev_strike','ev_intercept','ev_assassination','ev_military','ev_statement']
+.forEach(k=>{LG[k]=L.layerGroup().addTo(_leafletMap);});
+
+const EVENT_REGISTRY=[];
+
+/* ICON FACTORIES */
+const C={iran:'#d4843a',israel:'#5a9fd4',usa:'#4a9a6a',nato:'#3a70a0',
+         russia:'#a04040',houthi:'#8a7028',hezbollah:'#6a8a38',
+         strike:'#b22222',intercept:'#c0392b',assassination:'#8b0000',
+         military:'#5a8a6a',statement:'#cccccc',nuclear:'#c9920a',
+         radar:'#00e5ff',radar_dead:'#c0392b'};
+
+function iCircle(col,sz=12,dash=false){
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}20;border:1.5px solid ${col};${dash?'border-style:dashed;':''}box-shadow:0 0 7px ${col}50;"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iSquare(col,sz=12){
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;background:${col}20;border:1.5px solid ${col};box-shadow:0 0 7px ${col}50;"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iDiamond(col,sz=12){
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;transform:rotate(45deg);background:${col}20;border:1.5px solid ${col};box-shadow:0 0 7px ${col}50;"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iTriangle(col,sz=14){
+  return L.divIcon({className:'',
+    html:`<svg width="${sz}" height="${sz}" viewBox="0 0 12 12"><polygon points="6,1 11,11 1,11" fill="${col}20" stroke="${col}" stroke-width="1.5" filter="drop-shadow(0 0 3px ${col}88)"/></svg>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz*0.85]});
+}
+function iNuke(sz=15){
+  return L.divIcon({className:'',
+    html:`<div style="font-size:${sz}px;line-height:1;filter:drop-shadow(0 0 4px #c9920a);">☢</div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iCarrier(col='#4a9a6a'){
+  return L.divIcon({className:'',
+    html:`<div style="font-size:19px;line-height:1;filter:drop-shadow(0 0 5px ${col});color:${col};">⬡</div>`,
+    iconSize:[22,22],iconAnchor:[11,11]});
+}
+function iRadar(destroyed=false){
+  const col = destroyed ? '#c0392b' : '#00e5ff';
+  const sz = 22;
+  return L.divIcon({className:'',
+    html:`<div style="position:relative;width:${sz}px;height:${sz}px;">
+      <svg width="${sz}" height="${sz}" viewBox="0 0 22 22" overflow="visible">
+        <!-- radar dish -->
+        <path d="M11,18 L11,11" stroke="${col}" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M4,11 Q4,4 11,4 Q18,4 18,11 Z" fill="${col}22" stroke="${col}" stroke-width="1.5"/>
+        <!-- base -->
+        <line x1="7" y1="18" x2="15" y2="18" stroke="${col}" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="11" y1="18" x2="11" y2="21" stroke="${col}" stroke-width="1.5"/>
+        <!-- sweep line -->
+        <line x1="11" y1="11" x2="16" y2="6" stroke="${col}" stroke-width="1" opacity="0.7"/>
+        ${destroyed ? `
+        <!-- red X overlay -->
+        <line x1="3" y1="3" x2="19" y2="19" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="19" y1="3" x2="3" y2="19" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round"/>
+        ` : `<circle cx="11" cy="11" r="1.5" fill="${col}"/>`}
+      </svg>
+    </div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+function iEvent(type,col,weight=1,fresh=false){
+  const base=Math.max(8,Math.min(18,8+Math.round(weight*1.0)));
+
+  // Dalgalı halka helper — sadece fresh=true ise eklenir
+  function pulseRings(color,sz){
+    if(!fresh) return '';
+    const h=sz/2;
+    return `
+      <div class="ev-pulse-ring" style="width:${sz}px;height:${sz}px;border:2px solid ${color};top:${h}px;left:${h}px;transform-origin:center;margin-left:-${h}px;margin-top:-${h}px;animation-delay:0s;"></div>
+      <div class="ev-pulse-ring" style="width:${sz}px;height:${sz}px;border:2px solid ${color};top:${h}px;left:${h}px;transform-origin:center;margin-left:-${h}px;margin-top:-${h}px;animation-delay:0.7s;"></div>`;
+  }
+
+  // ev_strike: küçük koyu kırmızı dolu nokta
+  if(type==='ev_strike'){
+    const sz=base;
+    const wrap=sz+20;
+    return L.divIcon({className:'',
+      html:`<div style="position:relative;width:${wrap}px;height:${wrap}px;">
+        ${pulseRings('#b22222',sz*1.8)}
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${sz}px;height:${sz}px;border-radius:50%;background:#b22222;box-shadow:0 0 5px #b2222299;"></div>
+      </div>`,
+      iconSize:[wrap,wrap],iconAnchor:[wrap/2,wrap/2]});
+  }
+
+  // ev_intercept: içi boş kırmızı nokta
+  if(type==='ev_intercept'){
+    const sz=base+2;
+    const wrap=sz+20;
+    return L.divIcon({className:'',
+      html:`<div style="position:relative;width:${wrap}px;height:${wrap}px;">
+        ${pulseRings('#c0392b',sz*1.8)}
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${sz}px;height:${sz}px;border-radius:50%;background:transparent;border:2px solid #c0392b;box-shadow:0 0 5px #c0392b66;"></div>
+      </div>`,
+      iconSize:[wrap,wrap],iconAnchor:[wrap/2,wrap/2]});
+  }
+
+  // ev_assassination: kafatası + üstünde çarpı
+  if(type==='ev_assassination'){
+    const sz=22;
+    const wrap=fresh?sz+20:sz;
+    return L.divIcon({className:'',
+      html:`<div style="position:relative;width:${wrap}px;height:${wrap}px;">
+        ${pulseRings('#8b0000',sz*1.2)}
+        <svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);" width="${sz}" height="${sz}" viewBox="0 0 22 22" overflow="visible">
+          <ellipse cx="11" cy="12" rx="6" ry="5.5" fill="#1a0000" stroke="#8b0000" stroke-width="1.5"/>
+          <rect x="8" y="16" width="6" height="3" rx="1" fill="#1a0000" stroke="#8b0000" stroke-width="1.2"/>
+          <ellipse cx="8.5" cy="12" rx="1.8" ry="2" fill="#8b0000"/>
+          <ellipse cx="13.5" cy="12" rx="1.8" ry="2" fill="#8b0000"/>
+          <path d="M10,15 L11,13.5 L12,15" fill="#8b0000"/>
+          <line x1="7" y1="3" x2="15" y2="8" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/>
+          <line x1="15" y1="3" x2="7" y2="8" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>`,
+      iconSize:[wrap,wrap],iconAnchor:[wrap/2,wrap/2]});
+  }
+
+  // ev_military: askeri kask
+  if(type==='ev_military'){
+    const sz=22;
+    const wrap=fresh?sz+20:sz;
+    return L.divIcon({className:'',
+      html:`<div style="position:relative;width:${wrap}px;height:${wrap}px;">
+        ${pulseRings('#5a8a6a',sz*1.2)}
+        <svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);" width="${sz}" height="${sz}" viewBox="0 0 22 22" overflow="visible">
+          <path d="M3,13 Q3,4 11,4 Q19,4 19,13 Z" fill="#3a5a3a" stroke="#5a8a6a" stroke-width="1.5"/>
+          <rect x="2" y="13" width="18" height="3" rx="1.5" fill="#2a4a2a" stroke="#5a8a6a" stroke-width="1.3"/>
+          <path d="M6,9 Q11,6 16,9" fill="none" stroke="#7aaa8a" stroke-width="1" opacity="0.5"/>
+        </svg>
+      </div>`,
+      iconSize:[wrap,wrap],iconAnchor:[wrap/2,wrap/2]});
+  }
+
+  // ev_statement: üç noktalı beyaz dikdörtgen
+  if(type==='ev_statement'){
+    const w=26,h=18;
+    const wrapW=fresh?w+20:w, wrapH=fresh?h+20:h;
+    return L.divIcon({className:'',
+      html:`<div style="position:relative;width:${wrapW}px;height:${wrapH}px;">
+        ${pulseRings('#cccccc',Math.min(w,h)*1.4)}
+        <svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);" width="${w}" height="${h}" viewBox="0 0 26 18" overflow="visible">
+          <rect x="1" y="1" width="24" height="14" rx="2" fill="#1a2535" stroke="#cccccc" stroke-width="1.5"/>
+          <circle cx="8" cy="8" r="1.8" fill="#cccccc"/>
+          <circle cx="13" cy="8" r="1.8" fill="#cccccc"/>
+          <circle cx="18" cy="8" r="1.8" fill="#cccccc"/>
+          <path d="M8,15 L6,18 L12,15" fill="#1a2535" stroke="#cccccc" stroke-width="1.2" stroke-linejoin="round"/>
+        </svg>
+      </div>`,
+      iconSize:[wrapW,wrapH],iconAnchor:[wrapW/2,wrapH/2]});
+  }
+
+  // fallback
+  const sz=base;
+  return L.divIcon({className:'',
+    html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col};"></div>`,
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+}
+
+/* DETAIL CARD */
+const evLabel={ev_strike:'SALDIRI',ev_intercept:'ÖNLEME',ev_assassination:'ÖLÜM/SUİKAST',ev_military:'ASKERİ HAREKAT',ev_statement:'AÇIKLAMA'};
+const evColor={ev_strike:C.strike,ev_intercept:C.intercept,ev_assassination:C.assassination,ev_military:C.military,ev_statement:C.statement};
+
+function showDetail(obj){
+  const col=obj.color||'#c9920a';
+  const tagsHtml=(obj.tags||[]).map(t=>`<span class="dtag" style="color:${col};border-color:${col}44">${t}</span>`).join('');
+  const typeBadge=`<span style="display:inline-block;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;padding:2px 7px;border:1px solid ${col};color:${col};margin-bottom:4px;">${obj.typeLabel||'TESİS'}</span>`;
+  document.getElementById('detail-area').innerHTML=`
+  <div class="dcard">
+    <div class="dcard-head">
+      <button class="dclose" onclick="document.getElementById('detail-area').innerHTML='<div class=detail-empty>Seçim yok</div>'">✕</button>
+      <div>${typeBadge}</div>
+      <div class="dcard-name">${obj.name}</div>
+      ${tagsHtml?`<div style="margin-top:6px">${tagsHtml}</div>`:''}
+    </div>
+    <div class="dcard-body">${obj.detail||'—'}</div>
+    <div class="dcard-meta">
+      ${obj.country?`<div class="dmeta-row"><span class="dmeta-key">Bölge</span><span class="dmeta-val">${obj.country}</span></div>`:''}
+      ${obj.faction?`<div class="dmeta-row"><span class="dmeta-key">Fraksiyon</span><span class="dmeta-val" style="color:${col}">${obj.faction}</span></div>`:''}
+      ${obj.date?`<div class="dmeta-row"><span class="dmeta-key">Tarih</span><span class="dmeta-val">${obj.date}</span></div>`:''}
+      <div class="dmeta-row"><span class="dmeta-key">Koord</span><span class="dmeta-val">${parseFloat(obj.lat).toFixed(4)}°K ${parseFloat(obj.lng).toFixed(4)}°D</span></div>
+      ${obj.source?`<div class="dmeta-row"><span class="dmeta-key">Kaynak</span><span class="dmeta-val">${obj.source}</span></div>`:''}
+    </div>
+  </div>`;
+}
+
+const _popupRegistry = new Map();
+let _popupId = 0;
+
+function mkPopup(obj){
+  const col=obj.color||'#c9920a';
+  const pid = _popupId++;
+  _popupRegistry.set(pid, obj);
+  return `<div class="lp-name">${obj.name}</div>
+    <div class="lp-type" style="color:${col}">${obj.typeLabel||''}</div>
+    <div class="lp-body">${(obj.detail||'').substring(0,130)}${(obj.detail||'').length>130?'…':''}</div>
+    ${obj.date?`<div class="lp-date">${obj.date}</div>`:''}
+    <div class="lp-open" onclick="window._openDetail(_popupRegistry.get(${pid}))">▶ DETAY KARTINI AÇ</div>`;
+}
+window._openDetail=obj=>showDetail(obj);
+
+function addMarker(obj,icon,layerKey,isEvent=false){
+  const m=L.marker([obj.lat,obj.lng],{icon})
+    .bindPopup(mkPopup(obj),{maxWidth:270})
+    .on('click',()=>showDetail(obj))
+    .addTo(LG[layerKey]);
+  if(isEvent) EVENT_REGISTRY.push({marker:m,layerKey,date:obj.date||'',obj,addedAt:obj._addedAt||Date.now()});
+  return m;
+}
+
+/* FEED */
+const feedItems=[];
+function pushFeed(obj){feedItems.unshift(obj);if(feedItems.length>60)feedItems.pop();renderFeed();}
+function renderFeed(){
+  const typeShort={ev_strike:'SALDIRI',ev_intercept:'ÖNLEME',ev_assassination:'SUİKAST',ev_military:'HAREKAT',ev_statement:'AÇIKLAMA'};
+  document.getElementById('feed').innerHTML=feedItems.slice(0,30).map((f,i)=>{
+    const pid = 90000+i;
+    _popupRegistry.set(pid, f);
+    const c=evColor[f.type]||'#888';
+    return `<div class="feed-item" onclick="window._openDetail(_popupRegistry.get(${pid}))">
+      <div class="fi-title">${(f.name||'').substring(0,55)}</div>
+      <div class="fi-meta"><div class="fi-dot" style="background:${c}"></div>
+        <span style="color:${c}">${typeShort[f.type]||''}</span>
+        <span>${f.country||''}</span><span>${f.date||''}</span>
+      </div></div>`;
+  }).join('');
+}
+
+/* STATIC BASES */
+const BASES=[
+
+  /* ── ABD ─────────────────────────────────────────── */
+  {name:"Al-Udeid Hava Üssü",lat:25.117,lng:51.315,type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü / CENTCOM HQ",faction:"USAF / CENTCOM",country:"Katar",detail:"Orta Doğu'daki en büyük ABD üssü. 10.000+ personel. CENTCOM ve AFCENT ileri karargahı. B-1B, F-35, EA-18G. Şubat 2026'da İran saldırısına hedef oldu.",tags:["CENTCOM HQ","SALDIRI HEDEF"]},
+  {name:"NSA Bahreyn / 5. Filo",lat:26.217,lng:50.607,type:"usa_bases",color:C.usa,typeLabel:"ABD Deniz Karargahı",faction:"USN / 5th Fleet",country:"Bahreyn",detail:"ABD 5. Filosu ve NAVCENT karargahı. 9.000+ personel. Körfez, Kızıldeniz ve Hint Okyanusu operasyonları.",tags:["5.FİLO HQ","SALDIRI HEDEF"]},
+  {name:"Camp Arifjan",lat:29.003,lng:48.143,type:"usa_bases",color:C.usa,typeLabel:"ABD Kara Karargahı",faction:"US Army Central",country:"Kuveyt",detail:"ABD Kara Kuvvetleri CENTCOM ileri karargahı. Lojistik ve destek merkezi.",tags:["ARCENT HQ"]},
+  {name:"Ali Al-Salem Hava Üssü",lat:29.346,lng:47.521,type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF",country:"Kuveyt",detail:"Irak sınırına 40 km uzaklıkta. Keşif ve hava desteği operasyonları.",tags:["HAVA OPS"]},
+  {name:"Camp Buehring",lat:29.488,lng:47.787,type:"usa_bases",color:C.usa,typeLabel:"ABD Kara Üssü",faction:"US Army",country:"Kuveyt",detail:"Irak ve Suriye'ye konuşlanma noktası. Lojistik ve eğitim üssü."},
+  {name:"Al-Dhafra Hava Üssü",lat:24.248,lng:54.547,type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF / 380th AEW",country:"BAE",detail:"F-22 Raptor, F-35, drone ve AWACS konuşlu. ISR ve muharebe hava operasyonları merkezi. İran saldırısında hedef.",tags:["F-22","SALDIRI HEDEF"]},
+  {name:"Prince Sultan Hava Üssü",lat:23.933,lng:45.428,type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF",country:"Suudi Arabistan",detail:"Riyad'ın 60 km güneyinde. Patriot ve THAAD bataryaları. F-35 ve tanker operasyonları.",tags:["THAAD","PATRİOT"]},
+  {name:"Ain al-Asad Hava Üssü",lat:33.376,lng:42.441,type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF / US Army",country:"Irak",detail:"Anbar vilayeti. Irak'taki en büyük ABD üssü. 2020 ve Şubat 2026'da İran saldırısına hedef oldu.",tags:["SALDIRI HEDEF"]},
+  {name:"Erbil Hava Üssü",lat:36.237,lng:43.963,type:"usa_bases",color:C.usa,typeLabel:"ABD / Koalisyon Üssü",faction:"USAF / Koalisyon",country:"Irak (IKBY)",detail:"Kürdistan Bölgesi. Kuzey Irak ve Suriye operasyonları. Koalisyon ve Peşmerge koordinasyon merkezi.",tags:["KOALİSYON"]},
+  {name:"Al-Tanf Üssü",lat:33.482,lng:38.649,type:"usa_bases",color:C.usa,typeLabel:"ABD İleri Üssü",faction:"USSOCOM",country:"Suriye",detail:"Irak-Suriye-Ürdün üçgen sınırında. İran kara koridorunu kesiyor. 2026'da varlığı sürdürülüyor.",tags:["STRATEJİK","KORIDOR KES"]},
+  {name:"Muwaffaq Salti Hava Üssü",lat:31.826,lng:36.787,type:"usa_bases",color:C.usa,typeLabel:"ABD Hava Üssü",faction:"USAF / 332nd AEW",country:"Ürdün",detail:"F-15E Strike Eagle konuşlu. Levant operasyonlarının merkezi.",tags:["F-15E","LEVANT OPS"]},
+  {name:"Thumrait Hava Üssü",lat:17.666,lng:54.024,type:"usa_bases",color:C.usa,typeLabel:"ABD Erişim Noktası",faction:"USAF",country:"Umman",detail:"Lojistik ve yeniden yakıt doldurma erişim noktası. Hint Okyanusu operasyonlarını destekler.",tags:["LOJİSTİK"]},
+
+  /* ── NATO ─────────────────────────────────────────── */
+  {name:"İncirlik Hava Üssü",lat:37.002,lng:35.426,type:"nato_bases",color:C.nato,typeLabel:"NATO / ABD Hava Üssü",faction:"NATO / USAF",country:"Türkiye",detail:"NATO güney kanadının kilit üssü. ~1.500 ABD personeli. B61 nükleer silah depolama şüphesi.",tags:["NATO","B61?"]},
+  {name:"Aksaz Deniz Üssü",lat:36.909,lng:28.316,type:"nato_bases",color:C.nato,typeLabel:"NATO Deniz Üssü",faction:"NATO / Türk Donanması",country:"Türkiye",detail:"NATO Akdeniz deniz üssü. Fırkateyn ve denizaltı operasyonları merkezi."},
+  {name:"Souda Bay Deniz Üssü",lat:35.531,lng:24.071,type:"nato_bases",color:C.nato,typeLabel:"NATO Deniz Üssü",faction:"NATO / ABD / Yunanistan",country:"Yunanistan",detail:"Girit adasında. NATO'nun Akdeniz'deki en önemli deniz üslerinden biri.",tags:["AKDENİZ"]},
+  {name:"Aviano Hava Üssü",lat:46.032,lng:12.597,type:"nato_bases",color:C.nato,typeLabel:"NATO / ABD Hava Üssü",faction:"NATO / USAF",country:"İtalya",detail:"F-16 filosu. B61 nükleer silah deposu. Orta Doğu operasyonlarına destek.",tags:["B61","F-16"]},
+  {name:"Sigonella Deniz Hava Üssü",lat:37.401,lng:14.924,type:"nato_bases",color:C.nato,typeLabel:"NATO / ABD Deniz Hava Üssü",faction:"NATO / USN",country:"İtalya",detail:"Sicilya. P-8 Poseidon ISR operasyonları merkezi. Doğu Akdeniz kritik noktası.",tags:["ISR","P-8"]},
+  {name:"Larissa Hava Üssü",lat:39.650,lng:22.421,type:"nato_bases",color:C.nato,typeLabel:"NATO Hava Üssü",faction:"NATO / Yunanistan",country:"Yunanistan",detail:"Yunanistan hava kuvvetleri ana üssü. NATO doğu kanadı desteği."},
+  {name:"Kürecik Radar İstasyonu",lat:38.694,lng:38.243,type:"nato_bases",color:C.nato,typeLabel:"NATO Füze Savunma Radarı",faction:"NATO / ABD",country:"Türkiye",detail:"AN/TPY-2 X-band erken uyarı radarı. NATO füze kalkanının gözü. Mart 2026'da İran hedefine girdi. Alman Patriot bataryasıyla korunuyor.",tags:["AN/TPY-2","NATO KALKAN"]},
+
+  /* ── RUSYA ────────────────────────────────────────── */
+  {name:"Hmeimim Hava Üssü",lat:35.401,lng:35.948,type:"russia_bases",color:C.russia,typeLabel:"Rusya Hava Üssü",faction:"VKS",country:"Suriye",detail:"Rusya Suriye ana hava üssü. Su-35S, Su-34 konuşlanmış.",tags:["AKTİF"]},
+  {name:"Tartus Deniz Üssü",lat:34.888,lng:35.887,type:"russia_bases",color:C.russia,typeLabel:"Rusya Deniz Üssü",faction:"VMF",country:"Suriye",detail:"Rusya'nın Akdeniz'deki tek kalıcı deniz tesisi.",tags:["AKDENİZ"]},
+  {name:"102. Askeri Üs — Gümrü",lat:40.789,lng:43.847,type:"russia_bases",color:C.russia,typeLabel:"Rusya Kara Üssü",faction:"Rus Ordusu",country:"Ermenistan",detail:"5.000+ personel. MiG-29 ve S-300 konuşlu. Güney Kafkasya'daki tek kalıcı Rus kara üssü. Mart 2026 itibarıyla aktif.",tags:["AKTİF","MiG-29","S-300"]},
+
+  /* ── İRAN ─────────────────────────────────────────── */
+  {name:"TAB 1 — Mehrabad",lat:35.689,lng:51.313,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Tahran ana taktik hava üssü. F-14 Tomcat ve Saeqeh filosu. Şubat 2026 saldırısında hasar.",tags:["F-14","HASAR"]},
+  {name:"TAB 2 — Tabriz",lat:38.133,lng:46.235,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Kuzey İran stratejik hava üssü. Azerbaycan ve Ermenistan sınırına yakın."},
+  {name:"TAB 3 — Hamadan",lat:35.211,lng:48.653,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Merkezi stratejik hava üssü. Su-24 ve MiG-29 filosu."},
+  {name:"TAB 4 — Dezful / Vahdati",lat:32.234,lng:48.397,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Irak sınırına yakın güneybatı üssü. F-4 Phantom ve Saeqeh filosu."},
+  {name:"TAB 6 — Buşehr",lat:28.944,lng:50.834,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Körfez hava operasyonları merkezi. Nükleer santral yakını."},
+  {name:"TAB 7 — Şiraz",lat:29.534,lng:52.589,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Güney İran hava üssü. Eğitim ve lojistik merkezi."},
+  {name:"TAB 8 — Bender Abbas",lat:27.218,lng:56.378,type:"iran_air",color:C.iran,typeLabel:"İran Hava Üssü",faction:"IRIAF",country:"İran",detail:"Hürmüz Boğazı denetim üssü. Shahed drone filosu.",tags:["DRONE","HÜRMÜZ"]},
+  {name:"Oghab 44 — Yeraltı Hava Üssü",lat:28.046,lng:55.520,type:"iran_air",color:C.iran,typeLabel:"İran Yeraltı Hava Üssü",faction:"IRIAF",country:"İran",detail:"Taktik yeraltı hava üssü. Hormozgan vilayeti. F-4 Phantom ve drone filosu. Hürmüz sürpriz saldırı kapasitesi.",tags:["YERALTI","STRATEJİK"]},
+  {name:"Bandar İmam Khomeini",lat:30.441,lng:49.066,type:"iran_naval",color:C.iran,typeLabel:"IRGC Deniz Üssü",faction:"IRGC Deniz Kuvvetleri",country:"İran",detail:"IRGC Deniz ana Körfez üssü. Mayın gemileri, hızlı saldırı tekneleri, füze botları.",tags:["IRGC","ANA ÜS"]},
+  {name:"Bender Abbas Deniz Üssü",lat:27.184,lng:56.266,type:"iran_naval",color:C.iran,typeLabel:"İran Deniz Üssü",faction:"İran Donanması",country:"İran",detail:"Ana deniz filosu limanı. Fırkateyn ve denizaltı bakım merkezi. Şubat 2026 saldırısında hasar.",tags:["HASAR"]},
+  {name:"Chahbahar Deniz Üssü",lat:25.289,lng:60.642,type:"iran_naval",color:C.iran,typeLabel:"İran Deniz Üssü",faction:"İran Donanması",country:"İran",detail:"Hint Okyanusu çıkışı. Rusya ve Çin ile ortak tatbikat üssü."},
+  {name:"Bandar Lengeh",lat:26.554,lng:54.879,type:"iran_naval",color:C.iran,typeLabel:"IRGC Deniz Üssü",faction:"IRGC 5. Deniz Bölgesi",country:"İran",detail:"IRGC 5. Deniz Bölgesi karargahı. Hürmüz adaları sorumluluğu. Hızlı saldırı teknesi ve mayın filosu.",tags:["IRGC","HÜRMÜZ"]},
+  {name:"Jask Deniz Üssü",lat:25.638,lng:57.770,type:"iran_naval",color:C.iran,typeLabel:"İran Deniz Üssü",faction:"İran Donanması",country:"İran",detail:"2021'de açıldı. Hint Okyanusu stratejik çıkış noktası. Chahbahar'ı destekleyen ileri üs.",tags:["YENİ","STRATEJİK"]},
+  {name:"Natanz — Zenginleştirme",lat:33.722,lng:51.727,type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer Zenginleştirme",faction:"AEOI",country:"İran",detail:"Ana uranyum zenginleştirme tesisi. Şubat 2026 ABD-İsrail saldırısında ağır hasar.",tags:["SALDIRI HEDEF","AĞIR HASAR"]},
+  {name:"Fordo — Yeraltı Tesisi",lat:34.884,lng:50.993,type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer Yeraltı Tesisi",faction:"AEOI",country:"İran",detail:"Bombalamaya dayanıklı yeraltı zenginleştirme tesisi. %60 zenginleştirilmiş uranyum. Şubat 2026'da hedef.",tags:["YERALTI","SALDIRI HEDEF"]},
+  {name:"Isfahan — Dönüşüm Tesisi",lat:32.610,lng:51.681,type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer Dönüşüm",faction:"AEOI",country:"İran",detail:"Uranyum dönüşüm ve yakıt üretim tesisi. Şubat 2026'da saldırıya uğradı.",tags:["SALDIRI HEDEF"]},
+  {name:"Buşehr Nükleer Santrali",lat:28.830,lng:50.887,type:"iran_nuclear",color:C.nuclear,typeLabel:"Nükleer Santral",faction:"İran / Rusya",country:"İran",detail:"Rusya yapımı 1000 MW reaktör. Saldırıdan kaçınıldı."},
+  {name:"Hojir — Füze Kompleksi",lat:35.661,lng:51.601,type:"iran_missile",color:C.iran,typeLabel:"IRGC Füze Tesisi",faction:"IRGC Hava-Uzay",country:"İran",detail:"Balistik füze üretim ve depolama kompleksi. Yeraltı tünel sistemi. Şubat 2026'da hedef.",tags:["BALİSTİK","SALDIRI HEDEF"]},
+  {name:"Shahroud — Füze Test",lat:36.209,lng:55.135,type:"iran_missile",color:C.iran,typeLabel:"Füze Test Sahası",faction:"IRGC Hava-Uzay",country:"İran",detail:"Balistik füze ve uzay aracı fırlatma test sahası."},
+  {name:"IRGC Küds Gücü — Tahran",lat:35.744,lng:51.373,type:"iran_missile",color:C.iran,typeLabel:"IRGC Karargahı",faction:"IRGC Küds Gücü",country:"İran",detail:"IRGC Küds Gücü genel karargahı. Vekil operasyonları koordinasyon merkezi.",tags:["KÜDS GÜCÜ"]},
+  {name:"Imam Ali Füze Üssü",lat:34.396,lng:47.222,type:"iran_missile",color:C.iran,typeLabel:"IRGC Yeraltı Füze Üssü",faction:"IRGC Hava-Uzay",country:"İran",detail:"Kermanşah ili. Irak sınırına yakın yeraltı silo tesisi. Haziran 2025'te İsrail saldırısına hedef oldu.",tags:["YERALTI","SALDIRI HEDEF"]},
+  {name:"Tabriz IRGC Karargahı",lat:38.133,lng:46.300,type:"iran_missile",color:C.iran,typeLabel:"IRGC Kuzeybatı Karargahı",faction:"IRGC",country:"İran",detail:"IRGC kuzeybatı komuta merkezi. Füze TEL ve hava savunma sistemleri. Şubat 2026'da vuruldu.",tags:["HASAR"]},
+  {name:"Khorramabad — Yeraltı Füze",lat:33.487,lng:48.355,type:"iran_missile",color:C.iran,typeLabel:"IRGC Yeraltı Füze Deposu",faction:"IRGC Hava-Uzay",country:"İran",detail:"80+ füze sığınağı. IRGC batı komutası. Panj Pelleh kompleksi.",tags:["YERALTI","80+ SILO"]},
+  {name:"Qeshm Adası — Füze Tesisi",lat:26.957,lng:56.276,type:"iran_missile",color:C.iran,typeLabel:"IRGC Deniz-Füze Tesisi",faction:"IRGC",country:"İran",detail:"Hürmüz Boğazı kontrolü. IRGC deniz-füze operasyonları. Mart 2026'da gündemde.",tags:["HÜRMÜZ","STRATEJİK"]},
+
+  /* ── İSRAİL ───────────────────────────────────────── */
+  {name:"Nevatim Hava Üssü",lat:30.969,lng:34.830,type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"F-35I Adir filosu. İran harekâtlarının ana üssü. Şubat 2026 operasyonunda merkezi rol.",tags:["F-35I","İRAN OPS"]},
+  {name:"Tel Nof Hava Üssü",lat:31.840,lng:34.819,type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"F-15I Ra'am filosu. Uzun menzilli saldırı kapasitesi. İHA operasyon merkezi.",tags:["F-15I"]},
+  {name:"Ramon Hava Üssü",lat:30.776,lng:34.666,type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"Negev. F-16I Sufa filosu. Uzun menzilli görevler için yakıt ikmal.",tags:["F-16I"]},
+  {name:"Palmachim Hava / Deniz Üssü",lat:31.897,lng:34.690,type:"israel_bases",color:C.israel,typeLabel:"İsrail Uzay / Deniz Üssü",faction:"IAF / INS",country:"İsrail",detail:"Uzay fırlatma merkezi ve Dolphin sınıfı denizaltı üssü. Nükleer ikinci vuruş kapasitesi.",tags:["DENİZALTI","NÜKLEER"]},
+  {name:"Dimona — Nükleer Tesis",lat:30.996,lng:35.147,type:"israel_bases",color:C.israel,typeLabel:"İsrail Nükleer Tesisi",faction:"IAEC",country:"İsrail",detail:"Açıklanmamış nükleer araştırma reaktörü. 80-400 başlık tahmini.",tags:["DUYURULMADI","NÜKLEER"]},
+  {name:"Hatzerim Hava Üssü",lat:31.233,lng:34.663,type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"F-15I Ra'am ve F-16I Sufa filosu. İsrail Hava Kuvvetleri Akademisi. Nükleer taşıma kapasitesi şüphesi.",tags:["F-15I","F-16I"]},
+  {name:"Ramat David Hava Üssü",lat:32.665,lng:35.179,type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"Kuzey İsrail. F-16C/D Barak filosu. Lübnan sınırına 50 km. Hizbullah operasyonları desteği.",tags:["F-16","KUZEY"]},
+  {name:"Ovda Hava Üssü",lat:29.940,lng:34.935,type:"israel_bases",color:C.israel,typeLabel:"İsrail Hava Üssü",faction:"IAF",country:"İsrail",detail:"Şubat 2026'da ABD 12x F-22 Raptor konuşlandırdı. Arrow bataryası mevcut. Stratejik önemi arttı.",tags:["F-22 ABD","ARROW"]},
+  {name:"Sdot Micha — Jericho",lat:31.759,lng:34.977,type:"israel_bases",color:C.israel,typeLabel:"İsrail Balistik Füze Üssü",faction:"IAF / IMOD",country:"İsrail",detail:"Jericho II ve III balistik füze üssü. İsrail nükleer ikinci vuruş kapasitesinin merkezi.",tags:["JERİCHO","NÜKLEER"]},
+
+  /* ── VEKİL GÜÇLER ─────────────────────────────────── */
+  {name:"Güney Lübnan — Hizbullah",lat:33.260,lng:35.375,type:"proxy_bases",color:C.hezbollah,typeLabel:"Hizbullah Konuşlanması",faction:"Hizbullah",country:"Lübnan",detail:"150.000+ füze kapasitesi. İsrail operasyonlarından sonra yeniden yapılanıyor.",tags:["150K FÜZE","YENİDEN YAPILANMA"]},
+  {name:"Bekaa Vadisi — Hizbullah",lat:33.846,lng:35.902,type:"proxy_bases",color:C.hezbollah,typeLabel:"Hizbullah Silah Deposu",faction:"Hizbullah",country:"Lübnan",detail:"İran silah transfer güzergahı. Uzun menzilli roket ve balistik füze depoları.",tags:["SİLAH TRANSFERİ"]},
+  {name:"Sana'a — Ensarullah",lat:15.476,lng:44.220,type:"proxy_bases",color:C.houthi,typeLabel:"Husi Karargahı",faction:"Ensarullah / Husiler",country:"Yemen",detail:"Husi siyasi ve askeri karargahı. İHA, balistik ve seyir füzesi kapasitesi.",tags:["ABD HEDEF","İSRAİL HEDEF"]},
+  {name:"Hudeyde — Husi Limanı",lat:14.799,lng:42.957,type:"proxy_bases",color:C.houthi,typeLabel:"Husi Deniz Lojistik",faction:"Ensarullah / Husiler",country:"Yemen",detail:"Kızıldeniz saldırı lojistik üssü. Saldırılarda hasar gördü.",tags:["HASAR","KIZILDENİZ"]},
+  {name:"Haşdi Şabi — Irak",lat:33.340,lng:44.401,type:"proxy_bases",color:C.iran,typeLabel:"İran Destekli Milis",faction:"Haşdi Şabi / KH",country:"Irak",detail:"İran destekli Irak milis çatısı. Kataib Hizbullah ve diğer gruplar. ABD üslerine roket saldırılarının kaynağı.",tags:["KATAİB HB","ROKET"]},
+  {name:"Hamas — Gazze",lat:31.417,lng:34.343,type:"proxy_bases",color:C.houthi,typeLabel:"Hamas Konuşlanması",faction:"Hamas / PIJ",country:"Gazze",detail:"Hamas askeri kolu ve Filistin İslami Cihad. Yeraltı tünel ağı. İsrail kara harekâtı devam ediyor.",tags:["YERALTI TÜNEL","AKTİF ÇATIŞMA"]},
+];
+
+const bIcon={iran_air:()=>iCircle(C.iran,12),iran_naval:()=>iCircle(C.iran,12,true),iran_nuclear:()=>iNuke(14),iran_missile:()=>iTriangle(C.iran,14),usa_bases:()=>iSquare(C.usa,12),nato_bases:()=>iSquare(C.nato,12),israel_bases:()=>iSquare(C.israel,12),russia_bases:()=>iSquare(C.russia,12),proxy_bases:b=>iDiamond(b.color||C.houthi,12),radar_sites:b=>iRadar(b.destroyed||false)};
+BASES.forEach(b=>addMarker(b,(bIcon[b.type]||((b)=>iCircle(C.iran,10)))(b),b.type,false));
+
+/* RADAR TESİSLERİ */
+const RADARS=[
+  {name:"AN/TPY-2 — Kürecik",lat:38.694,lng:38.243,destroyed:false,color:C.radar,typeLabel:"ABD/NATO Radar",faction:"US Army / NATO",country:"Türkiye",detail:"AN/TPY-2 X-band erken uyarı radarı. NATO füze kalkanının ana sensörü. Mart 2026'da İran hedefine girdi. Alman Patriot bataryasıyla korunuyor.",tags:["AN/TPY-2","AKTİF"]},
+  {name:"AN/FPS-132 — Umm Dahal",lat:25.050,lng:51.200,destroyed:true,color:C.radar_dead,typeLabel:"ABD Erken Uyarı Radarı",faction:"USAF",country:"Katar",detail:"AN/FPS-132 sabit erken uyarı radarı. 3 Mart 2026'da İran balistik füzesiyle imha edildi.",tags:["İMHA","3 MART 2026"]},
+  {name:"AN/TPY-2 — Muwaffaq Salti",lat:31.826,lng:36.850,destroyed:true,color:C.radar_dead,typeLabel:"ABD THAAD Radarı",faction:"US Army",country:"Ürdün",detail:"AN/TPY-2 THAAD fire control radarı. 2 Mart 2026'da İran hipersonik füzesiyle imha edildi.",tags:["İMHA","2 MART 2026"]},
+  {name:"AN/TPY-2 — Al-Ruwais",lat:24.120,lng:51.560,destroyed:true,color:C.radar_dead,typeLabel:"ABD THAAD Radarı",faction:"US Army / BAE",country:"BAE",detail:"AN/TPY-2 THAAD radarı. 1 Mart 2026'da İran saldırısında hasar gördü / imha edildi.",tags:["İMHA","1 MART 2026"]},
+  {name:"AN/TPY-2 — Prince Sultan",lat:23.970,lng:45.530,destroyed:false,color:C.radar,typeLabel:"ABD THAAD Radarı",faction:"US Army",country:"Suudi Arabistan",detail:"AN/TPY-2 THAAD radarı. 1 Mart 2026'da İran saldırısında hasar gördü, kısmen onarıldı.",tags:["HASAR","KISMİ ONARIM"]},
+  {name:"AN/TPY-2 — İsrail",lat:31.500,lng:34.900,destroyed:false,color:C.radar,typeLabel:"ABD/İsrail THAAD Radarı",faction:"US Army / IAF",country:"İsrail",detail:"2019'dan beri ABD operasyonunda. Arrow ve THAAD entegrasyonu. Aktif.",tags:["AKTİF","THAAD"]},
+];
+RADARS.forEach(r=>addMarker(r,iRadar(r.destroyed),'radar_sites',false));
+
+/* SEMI-STATIC */
+const SEMI=[
+  {name:"USS Abraham Lincoln (CVN-72)",lat:22.5,lng:61.0,color:C.usa,typeLabel:"ABD Uçak Gemisi",faction:"USN / CENTCOM",country:"Arabistan Denizi",detail:"Operation Epic Fury kapsamında Arabistan Denizi'nde. F/A-18E/F, F-35C, EA-18G filosu. Şubat 2026 operasyonunda aktif.",tags:["AKTİF","ARABIAN SEA"],layerKey:"carriers"},
+  {name:"USS Gerald R. Ford (CVN-78)",lat:20.0,lng:40.5,color:C.usa,typeLabel:"ABD Uçak Gemisi",faction:"USN",country:"Kızıldeniz",detail:"5 Mart 2026'da Süveyş'ten geçti. Kızıldeniz Husi operasyonları. F/A-18 ve F-35C filosu.",tags:["KIZILDENİZ OPS"],layerKey:"carriers"},
+  {name:"USN 5. Filo — Bahreyn",lat:26.217,lng:50.607,color:C.usa,typeLabel:"ABD 5. Filo",faction:"USN / NAVCENT",country:"Bahreyn",detail:"Körfez, Kızıldeniz ve Hint Okyanusu operasyonları karargahı.",layerKey:"fleets"},
+  {name:"NATO SNMG-2",lat:34.2,lng:26.0,color:C.nato,typeLabel:"NATO Deniz Grubu",faction:"NATO",country:"Doğu Akdeniz",detail:"NATO Kalıcı Deniz Grubu 2. 6 fırkateyn. Doğu Akdeniz devriyesi.",layerKey:"fleets"},
+  {name:"THAAD — Prince Sultan",lat:23.970,lng:45.480,color:C.usa,typeLabel:"Hava Savunma — THAAD",faction:"US Army",country:"Suudi Arabistan",detail:"Terminal Yüksek İrtifa Alan Savunması. 1 Mart'ta İran saldırısında hasar gördü.",tags:["THAAD","HASAR"],layerKey:"airdefense"},
+  {name:"Patriot PAC-3 — Kuveyt",lat:29.370,lng:47.980,color:C.usa,typeLabel:"Hava Savunma — Patriot",faction:"US Army / Kuveyt",country:"Kuveyt",detail:"Patriot PAC-3 bataryası. Şubat 2026 İran saldırısında aktif füze önleme.",tags:["PAC-3","AKTİF"],layerKey:"airdefense"},
+  {name:"Patriot — Al-Dhafra",lat:24.248,lng:54.547,color:C.usa,typeLabel:"Hava Savunma — Patriot",faction:"USAF / BAE",country:"BAE",detail:"Patriot bataryası. Şubat-Mart 2026 saldırılarında devrede.",tags:["PAC-3"],layerKey:"airdefense"},
+  {name:"Arrow-3 / Davids Sling — İsrail",lat:31.800,lng:34.900,color:C.israel,typeLabel:"Hava Savunma — Çok Katmanlı",faction:"IAF / IMDO",country:"İsrail",detail:"Arrow-3 (balistik), Davids Sling (orta menzil), Iron Dome (kısa menzil). Çok katmanlı bütünleşik hava savunması.",tags:["ARROW-3","IRON DOME"],layerKey:"airdefense"},
+];
+SEMI.forEach(s=>{
+  let icon;
+  if(s.layerKey==='carriers') icon=iCarrier(s.color);
+  else if(s.layerKey==='fleets') icon=iDiamond(s.color,14);
+  else icon=iTriangle(s.color,13);
+  addMarker(s,icon,s.layerKey,false);
+});
+
+/* TIMELINE */
+let activeStart=null,activeEnd=null;
+function applyTimeline(){
+  activeStart=document.getElementById('tl-start').value||null;
+  activeEnd=document.getElementById('tl-end').value||null;
+  filterEvents();
+}
+function filterEvents(){
+  let shown=0;
+  EVENT_REGISTRY.forEach(({marker,layerKey,date})=>{
+    const inLayer=_leafletMap.hasLayer(LG[layerKey]);
+    let show=true;
+    if(activeStart&&date&&date<activeStart) show=false;
+    if(activeEnd&&date&&date>activeEnd) show=false;
+    if(show&&inLayer){if(!LG[layerKey].hasLayer(marker))LG[layerKey].addLayer(marker);shown++;}
+    else{if(LG[layerKey].hasLayer(marker))LG[layerKey].removeLayer(marker);}
+  });
+  document.getElementById('tl-count').textContent=shown;
+  updateStats();
+}
+function updateStats(){
+  const total=EVENT_REGISTRY.filter(r=>_leafletMap.hasLayer(LG[r.layerKey])&&LG[r.layerKey].hasLayer(r.marker)).length;
+  const strikes=EVENT_REGISTRY.filter(r=>r.layerKey==='ev_strike'&&_leafletMap.hasLayer(LG[r.layerKey])&&LG[r.layerKey].hasLayer(r.marker)).length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-strike').textContent=strikes;
+}
+document.querySelectorAll('.tl-chip[data-span]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tl-chip[data-span]').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    const now=new Date(),start=new Date(now);
+    const span=btn.dataset.span;
+    if(span==='24h')start.setDate(start.getDate()-1);
+    else if(span==='72h')start.setDate(start.getDate()-3);
+    else if(span==='7d')start.setDate(start.getDate()-7);
+    else if(span==='30d')start.setDate(start.getDate()-30);
+    const fmt=d=>d.toISOString().split('T')[0];
+    document.getElementById('tl-start').value=fmt(start);
+    document.getElementById('tl-end').value=fmt(now);
+    applyTimeline();
+  });});
+
+/* LAYER TOGGLES */
+document.querySelectorAll('.lrow[data-layer]').forEach(row=>{
+  row.addEventListener('click',()=>{
+    const k=row.dataset.layer;
+    if(_leafletMap.hasLayer(LG[k])){_leafletMap.removeLayer(LG[k]);row.classList.add('off');}
+    else{LG[k].addTo(_leafletMap);row.classList.remove('off');}
+    filterEvents();
+  });
+});
+
+/* COORDS */
+_leafletMap.on('mousemove',e=>{
+  document.getElementById('coord-strip').textContent=
+    `${e.latlng.lat.toFixed(4)}° K  ·  ${e.latlng.lng.toFixed(4)}° D`;
+});
+
+/* ══════════════════════════════════════════
+   SUNUCU API — db.json eventlerini çek
+══════════════════════════════════════════ */
+const API_BASE = 'https://csmap-production.up.railway.app';
+
+// Sunucudan eventleri çek ve haritaya ekle
+// Sunucudan yüklenen event ID'lerini takip et → Map<eid, addedAt ms>
+const serverEventIds = new Map();
+
+async function fetchServerEvents(){
+  try{
+    const resp = await fetch(`${API_BASE}/api/events`);
+    if(!resp.ok) throw new Error('Sunucu yanıt vermedi');
+    const events = await resp.json();
+
+    // Sunucudan gelen tüm listeyi taze yükle
+    // Önce mevcut server eventleri haritadan kaldır
+    EVENT_REGISTRY.filter(r=>r.source==='server').forEach(r=>{
+      try{LG[r.layerKey].removeLayer(r.marker);}catch(e){}
+    });
+    // Registry'den server eventleri temizle
+    const nonServer = EVENT_REGISTRY.filter(r=>r.source!=='server');
+    EVENT_REGISTRY.splice(0, EVENT_REGISTRY.length, ...nonServer);
+    serverEventIds.clear();
+
+    let newCount = 0;
+    events.forEach((e, idx)=>{
+      if(!e.lat||!e.lng||!e.type) return;
+
+      const eid = `idx_${idx}`;
+      serverEventIds.set(eid, true);
+
+      const addedAtMs = e.addedAt ? new Date(e.addedAt).getTime() : Date.now();
+      const col = evColor[e.type]||C.strike;
+      const fresh = (Date.now() - addedAtMs) < 7*60*60*1000;
+      const obj = {
+        ...e,
+        color: col,
+        typeLabel: evLabel[e.type]||e.type,
+        source: 'server',
+        _addedAt: addedAtMs
+      };
+      addMarker(obj, iEvent(e.type, col, e.weight||3, fresh), e.type, true);
+      EVENT_REGISTRY[EVENT_REGISTRY.length-1].source = 'server';
+      EVENT_REGISTRY[EVENT_REGISTRY.length-1].isFresh = fresh;
+      newCount++;
+    });
+
+    // Feed'i de güncelle
+    feedItems.length = 0;
+    [...EVENT_REGISTRY].reverse().forEach(r=>{ if(r.obj) feedItems.push(r.obj); });
+    renderFeed();
+
+    filterEvents();
+    document.getElementById('srv-badge').textContent = `✓ ${events.length} olay`;
+    document.getElementById('srv-badge').style.color = 'var(--ev-military)';
+  }catch(err){
+    document.getElementById('srv-badge').textContent = '✗ Sunucu yok — yeniden deneniyor';
+    document.getElementById('srv-badge').style.color = 'var(--muted)';
+    // 10 saniye sonra tekrar dene
+    setTimeout(fetchServerEvents, 10000);
+  }
+}
+
+/* ══════════════════════════════════════════
+   ADMİN PANELİ
+══════════════════════════════════════════ */
+// Admin oturum durumu
+let adminLoggedIn = false;
+
+// Sekme geçişi
+function switchAdminTab(tab){
+  const addForm  = document.getElementById('admin-form');
+  const manage   = document.getElementById('admin-manage');
+  const tabAdd   = document.getElementById('tab-add');
+  const tabMng   = document.getElementById('tab-manage');
+  if(!adminLoggedIn){
+    document.getElementById('admin-login').style.display='block';
+    return;
+  }
+  if(tab==='add'){
+    addForm.style.display='block';
+    manage.style.display='none';
+    tabAdd.style.background='rgba(201,146,10,.15)';
+    tabAdd.style.borderColor='#c9920a';
+    tabAdd.style.color='#c9920a';
+    tabMng.style.background='transparent';
+    tabMng.style.borderColor='#243040';
+    tabMng.style.color='#456070';
+  } else {
+    addForm.style.display='none';
+    manage.style.display='block';
+    tabAdd.style.background='transparent';
+    tabAdd.style.borderColor='#243040';
+    tabAdd.style.color='#456070';
+    tabMng.style.background='rgba(201,146,10,.15)';
+    tabMng.style.borderColor='#c9920a';
+    tabMng.style.color='#c9920a';
+    loadManageList();
+  }
+}
+
+// Yönet listesini yükle
+async function loadManageList(){
+  const list = document.getElementById('manage-list');
+  list.innerHTML='<div style="color:#456070;font-family:Share Tech Mono,monospace;font-size:9px;">Yükleniyor…</div>';
+  try{
+    const resp = await fetch(`${API_BASE}/api/events`);
+    const events = await resp.json();
+    if(events.length===0){
+      list.innerHTML='<div style="color:#456070;font-family:Share Tech Mono,monospace;font-size:9px;padding:8px 0;">Kayıtlı olay yok.</div>';
+      return;
+    }
+    const typeColor={ev_strike:'#b22222',ev_intercept:'#c0392b',ev_assassination:'#8b0000',ev_military:'#5a8a6a',ev_statement:'#cccccc'};
+    const typeShort={ev_strike:'SALDIRI',ev_intercept:'ÖNLEME',ev_assassination:'SUİKAST',ev_military:'HAREKAT',ev_statement:'AÇIKLAMA'};
+    list.innerHTML = events.map((e,i)=>`
+      <div style="
+        display:flex;align-items:center;gap:8px;
+        padding:8px;margin-bottom:5px;
+        background:#17202c;border:1px solid #243040;
+      ">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;color:#e8f0f8;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:8px;display:flex;gap:6px;">
+            <span style="color:${typeColor[e.type]||'#888'}">${typeShort[e.type]||e.type}</span>
+            <span style="color:#456070">${e.country||''}</span>
+            <span style="color:#456070">${e.date||''}</span>
+          </div>
+        </div>
+        <button onclick="deleteEvent(${i})" style="
+          flex-shrink:0;background:rgba(192,57,43,.12);border:1px solid #c0392b;
+          color:#c0392b;font-family:'Share Tech Mono',monospace;font-size:9px;
+          padding:4px 8px;cursor:pointer;letter-spacing:1px;transition:all .13s;
+          white-space:nowrap;
+        " onmouseover="this.style.background='#c0392b';this.style.color='#fff'"
+           onmouseout="this.style.background='rgba(192,57,43,.12)';this.style.color='#c0392b'">
+          ✕ SİL
+        </button>
+      </div>`).join('');
+  }catch(err){
+    list.innerHTML='<div style="color:#c0392b;font-family:Share Tech Mono,monospace;font-size:9px;">Sunucu bağlantısı kurulamadı.</div>';
+  }
+}
+
+// Olay sil
+async function deleteEvent(idx){
+  const u = _adminUser;
+  const p = _adminPass;
+  if(!u||!p){alert('Önce giriş yapınız.');return;}
+  if(!confirm('Bu olayı silmek istediğinize emin misiniz?')) return;
+  try{
+    const resp = await fetch(`${API_BASE}/api/events/${idx}`,{
+      method:'DELETE',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p})
+    });
+    const result = await resp.json();
+    if(!resp.ok) throw new Error(result.error||'Hata');
+    // Haritadan da kaldır — serverEventIds temizle ve yeniden yükle
+    serverEventIds.clear();
+    EVENT_REGISTRY.filter(r=>r.source==='server').forEach(r=>{
+      try{LG[r.layerKey].removeLayer(r.marker);}catch(e){}
+    });
+    EVENT_REGISTRY.splice(0,EVENT_REGISTRY.length,...EVENT_REGISTRY.filter(r=>r.source!=='server'));
+    await fetchServerEvents();
+    loadManageList();
+  }catch(err){
+    alert('✗ Silinemedi: '+(err.message||'Sunucu hatası'));
+  }
+}
+let adminPickMode = false;  // haritadan konum seçme modu
+let adminPickedLat = null;
+let adminPickedLng = null;
+let adminPickMarker = null;
+
+// Panel aç/kapat
+function toggleAdmin(){
+  const panel = document.getElementById('admin-overlay');
+  panel.style.display = panel.style.display==='flex' ? 'none' : 'flex';
+  if(panel.style.display==='flex' && !adminLoggedIn){
+    document.getElementById('admin-login').style.display='block';
+    document.getElementById('admin-form').style.display='none';
+  }
+}
+
+// Kimlik bilgilerini sakla
+let _adminUser = '';
+let _adminPass = '';
+
+// Giriş
+function adminLogin(){
+  const u=document.getElementById('a-user').value;
+  const p=document.getElementById('a-pass').value;
+  if(!u||!p){alert('Kullanıcı adı ve şifre giriniz.');return;}
+  _adminUser = u;
+  _adminPass = p;
+  adminLoggedIn=true;
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-form').style.display='block';
+}
+
+// Haritadan konum seçme modu
+function startPick(){
+  adminPickMode=true;
+  document.getElementById('admin-overlay').style.display='none';
+  document.getElementById('pick-hint').style.display='block';
+  _leafletMap.getContainer().style.cursor='crosshair';
+}
+
+_leafletMap.on('click',function(e){
+  if(!adminPickMode) return;
+  adminPickedLat = e.latlng.lat;
+  adminPickedLng = e.latlng.lng;
+
+  // Geçici marker
+  if(adminPickMarker) _leafletMap.removeLayer(adminPickMarker);
+  adminPickMarker = L.circleMarker([adminPickedLat,adminPickedLng],{
+    radius:8, color:'#c9920a', fillColor:'#c9920a', fillOpacity:.4, weight:2
+  }).addTo(_leafletMap);
+
+  // Formu doldur
+  document.getElementById('a-lat').value = adminPickedLat.toFixed(5);
+  document.getElementById('a-lng').value = adminPickedLng.toFixed(5);
+
+  // Modu kapat
+  adminPickMode=false;
+  _leafletMap.getContainer().style.cursor='';
+  document.getElementById('pick-hint').style.display='none';
+  document.getElementById('admin-overlay').style.display='flex';
+  document.getElementById('admin-form').style.display='block';
+});
+
+// Event gönder
+async function submitEvent(){
+  const u = _adminUser;
+  const p = _adminPass;
+  const name    = document.getElementById('a-name').value.trim();
+  const type    = document.getElementById('a-type').value;
+  const date    = document.getElementById('a-date').value;
+  const lat     = parseFloat(document.getElementById('a-lat').value);
+  const lng     = parseFloat(document.getElementById('a-lng').value);
+  const country = document.getElementById('a-country').value.trim();
+  const detail  = document.getElementById('a-detail').value.trim();
+  const weight  = parseInt(document.getElementById('a-weight').value)||3;
+
+  if(!name){alert('Olay adı zorunlu.');return;}
+  if(isNaN(lat)||isNaN(lng)){alert('Koordinat giriniz (haritaya tıklayın).');return;}
+
+  const event={lat,lng,name,type,detail,weight,date,country:country||'Bölge',faction:'Bildirilen',source:'Admin Onaylı'};
+
+  try{
+    const resp=await fetch(`${API_BASE}/api/events`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p,event})
+    });
+    const result=await resp.json();
+    if(!resp.ok) throw new Error(result.error||'Hata');
+
+    alert('✓ Olay başarıyla eklendi!');
+    // Formu temizle
+    ['a-name','a-lat','a-lng','a-country','a-detail'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('a-weight').value='3';
+    if(adminPickMarker){_leafletMap.removeLayer(adminPickMarker);adminPickMarker=null;}
+    document.getElementById('admin-overlay').style.display='none';
+    // Sunucudan yenile
+    fetchServerEvents();
+  }catch(err){
+    alert('✗ Hata: '+(err.message||'Sunucu bağlantısı kurulamadı'));
+  }
+}
+
+/* ══════════════════════════════════════════
+   GÜNCELLIK KONTROLÜ — 7 saat geçince dalga kaldır
+══════════════════════════════════════════ */
+const FRESH_MS = 7 * 60 * 60 * 1000; // 7 saat
+
+function updateFreshness(){
+  const now = Date.now();
+  EVENT_REGISTRY.forEach(reg=>{
+    if(!reg.addedAt) return;
+    const wasFresh = reg.isFresh;
+    const isFresh  = (now - reg.addedAt) < FRESH_MS;
+    if(wasFresh === isFresh) return; // değişim yok
+    reg.isFresh = isFresh;
+    // ikonu güncelle
+    const col = reg.obj.color || C.strike;
+    const newIcon = iEvent(reg.obj.type, col, reg.obj.weight||3, isFresh);
+    reg.marker.setIcon(newIcon);
+  });
+}
+
+/* INIT */
+applyTimeline();
+fetchServerEvents();
+setInterval(fetchServerEvents, 30*1000);
+setInterval(updateFreshness, 60*1000); // her dakika güncellik kontrol et
+</script>
+
+<!-- ══════════════════════════
+     ADMİN BUTONU (harita üzeri)
+══════════════════════════ -->
+<button onclick="toggleAdmin()" style="
+  position:fixed;bottom:70px;right:14px;z-index:3000;
+  background:rgba(17,22,30,.9);border:1px solid var(--gold);
+  color:var(--gold);font-family:'Share Tech Mono',monospace;
+  font-size:10px;letter-spacing:2px;padding:6px 12px;
+  cursor:pointer;backdrop-filter:blur(6px);transition:all .15s;
+" onmouseover="this.style.background='var(--gold)';this.style.color='#0b0e13'"
+   onmouseout="this.style.background='rgba(17,22,30,.9)';this.style.color='var(--gold)'">
+  ⊕ ADMİN
+</button>
+
+<!-- Sunucu durumu rozeti -->
+<div id="srv-badge" style="
+  position:fixed;bottom:70px;left:234px;z-index:3000;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  background:rgba(17,22,30,.85);border:1px solid var(--border);
+  padding:4px 10px;letter-spacing:1px;color:var(--muted);
+  backdrop-filter:blur(4px);
+">… sunucu kontrol ediliyor</div>
+
+<!-- Haritadan konum seçme ipucu -->
+<div id="pick-hint" style="
+  display:none;position:fixed;top:55px;left:50%;transform:translateX(-50%);
+  z-index:3000;background:rgba(201,146,10,.95);color:#0b0e13;
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;
+  padding:8px 20px;font-weight:700;
+">⊕ HARITADA KONUMA TIKLAYIN</div>
+
+<!-- ══════════════════════════
+     ADMİN OVERLAY
+══════════════════════════ -->
+<div id="admin-overlay" style="
+  display:none;position:fixed;inset:0;z-index:4000;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+">
+  <div style="
+    background:#11161e;border:1px solid #2e4055;
+    width:420px;max-height:90vh;overflow-y:auto;
+    font-family:'Oxanium',sans-serif;
+  ">
+    <!-- Header -->
+    <div style="
+      padding:12px 16px;border-bottom:1px solid #243040;
+      display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(90deg,rgba(201,146,10,.08),transparent);
+    ">
+      <div style="display:flex;gap:0;">
+        <button onclick="switchAdminTab('add')" id="tab-add" style="background:rgba(201,146,10,.15);border:1px solid #c9920a;border-right:none;color:#c9920a;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:4px 12px;cursor:pointer;">+ EKLE</button>
+        <button onclick="switchAdminTab('manage')" id="tab-manage" style="background:transparent;border:1px solid #243040;color:#456070;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:4px 12px;cursor:pointer;">✎ YÖNET</button>
+      </div>
+      <button onclick="toggleAdmin()" style="background:none;border:none;color:#456070;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+
+    <!-- GİRİŞ FORMU -->
+    <div id="admin-login" style="padding:20px 16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#456070;margin-bottom:14px;text-transform:uppercase;">Kimlik Doğrulama</div>
+      <input id="a-user" type="text" placeholder="Kullanıcı adı" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:12px;
+        padding:8px 10px;outline:none;margin-bottom:8px;
+      ">
+      <input id="a-pass" type="password" placeholder="Şifre" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:12px;
+        padding:8px 10px;outline:none;margin-bottom:12px;
+      ">
+      <button onclick="adminLogin()" style="
+        width:100%;background:rgba(201,146,10,.12);border:1px solid #c9920a;
+        color:#c9920a;font-family:'Oxanium',sans-serif;font-size:12px;
+        font-weight:700;padding:9px;cursor:pointer;letter-spacing:2px;
+        transition:all .13s;
+      " onmouseover="this.style.background='#c9920a';this.style.color='#0b0e13'"
+         onmouseout="this.style.background='rgba(201,146,10,.12)';this.style.color='#c9920a'">
+        GİRİŞ YAP
+      </button>
+    </div>
+
+    <!-- EVENT EKLEME FORMU -->
+    <div id="admin-form" style="display:none;padding:16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#456070;margin-bottom:12px;text-transform:uppercase;">Yeni Olay Ekle</div>
+
+      <!-- Konum seç butonu -->
+      <button onclick="startPick()" style="
+        width:100%;background:rgba(41,128,185,.12);border:1px dashed #2471a3;
+        color:#5a9fd4;font-family:'Oxanium',sans-serif;font-size:11px;
+        font-weight:600;padding:8px;cursor:pointer;letter-spacing:1px;
+        margin-bottom:10px;transition:all .13s;
+      " onmouseover="this.style.background='rgba(41,128,185,.25)'"
+         onmouseout="this.style.background='rgba(41,128,185,.12)'">
+        ⊕ HARİTADAN KONUM SEÇ
+      </button>
+
+      <!-- Koordinatlar (otomatik dolar) -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input id="a-lat" type="number" step="0.0001" placeholder="Enlem" style="flex:1;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 8px;outline:none;">
+        <input id="a-lng" type="number" step="0.0001" placeholder="Boylam" style="flex:1;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 8px;outline:none;">
+      </div>
+
+      <input id="a-name" type="text" placeholder="Olay adı / başlık *" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:12px;
+        padding:7px 10px;outline:none;margin-bottom:8px;
+      ">
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <select id="a-type" style="flex:2;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:11px;padding:7px 8px;outline:none;">
+          <option value="ev_strike">● Saldırı</option>
+          <option value="ev_intercept">○ Önleme</option>
+          <option value="ev_assassination">☠ Ölüm / Suikast</option>
+          <option value="ev_military">⛑ Askeri Harekat</option>
+          <option value="ev_statement">▭ Açıklama</option>
+        </select>
+        <input id="a-date" type="date" style="flex:1.5;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 6px;outline:none;">
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+        <input id="a-country" type="text" placeholder="Ülke / Bölge" style="flex:1;background:#17202c;border:1px solid #243040;color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:11px;padding:7px 8px;outline:none;">
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#456070;letter-spacing:1px;">AĞIRLIK</span>
+          <input id="a-weight" type="number" min="1" max="10" value="3" style="width:46px;background:#17202c;border:1px solid #243040;color:#c9920a;font-family:'Share Tech Mono',monospace;font-size:12px;padding:7px 6px;outline:none;text-align:center;">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:8px;color:#456070;">/10</span>
+        </div>
+      </div>
+
+      <textarea id="a-detail" placeholder="Açıklama (isteğe bağlı)" rows="3" style="
+        width:100%;background:#17202c;border:1px solid #243040;
+        color:#b8ccdc;font-family:'Oxanium',sans-serif;font-size:11px;
+        padding:7px 10px;outline:none;resize:none;margin-bottom:12px;
+      "></textarea>
+
+      <div style="display:flex;gap:8px;">
+        <button onclick="submitEvent()" style="
+          flex:1;background:rgba(201,146,10,.12);border:1px solid #c9920a;
+          color:#c9920a;font-family:'Oxanium',sans-serif;font-size:12px;
+          font-weight:700;padding:9px;cursor:pointer;letter-spacing:1px;
+          transition:all .13s;
+        " onmouseover="this.style.background='#c9920a';this.style.color='#0b0e13'"
+           onmouseout="this.style.background='rgba(201,146,10,.12)';this.style.color='#c9920a'">
+          ⊕ HARITAYA EKLE
+        </button>
+        <button onclick="toggleAdmin()" style="
+          flex:0 0 auto;background:transparent;border:1px solid #243040;
+          color:#456070;font-family:'Oxanium',sans-serif;font-size:12px;
+          padding:9px 14px;cursor:pointer;transition:all .13s;
+        " onmouseover="this.style.borderColor='#456070';this.style.color='#b8ccdc'"
+           onmouseout="this.style.borderColor='#243040';this.style.color='#456070'">
+          İPTAL
+        </button>
+      </div>
+
+      <!-- Çıkış -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #243040;text-align:right;">
+        <button onclick="adminLoggedIn=false;document.getElementById('admin-login').style.display='block';document.getElementById('admin-form').style.display='none';document.getElementById('admin-manage').style.display='none';"
+          style="background:none;border:none;color:#456070;font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">
+          ↩ ÇIKIŞ YAP
+        </button>
+      </div>
+    </div>
+
+    <!-- YÖNET PANELİ -->
+    <div id="admin-manage" style="display:none;padding:16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#456070;margin-bottom:12px;text-transform:uppercase;">Kayıtlı Olaylar</div>
+      <div id="manage-list" style="max-height:400px;overflow-y:auto;">
+        <div style="color:#456070;font-family:'Share Tech Mono',monospace;font-size:9px;">Yükleniyor…</div>
+      </div>
+      <!-- Çıkış -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #243040;text-align:right;">
+        <button onclick="adminLoggedIn=false;document.getElementById('admin-login').style.display='block';document.getElementById('admin-manage').style.display='none';"
+          style="background:none;border:none;color:#456070;font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;">
+          ↩ ÇIKIŞ YAP
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
